@@ -30,22 +30,16 @@ html, body {
   overflow-x: hidden;
 }
 
-html { background: #000000; }
-
-body {
-  background: #000000;
-  color: #8cab87;
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: 'cv11';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  position: relative;
+html, body {
+  background-color: var(--bg-primary, #000000);
+  color: var(--text-primary, #ffffff);
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 h1, h2, h3, h4 {
   font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: 'ss01';
-  color: #ddffdc;
+  color: var(--text-primary, #ddffdc);
 }
 
 .font-display { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }

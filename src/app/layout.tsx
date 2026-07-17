@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import InteractiveBackground from "@/components/InteractiveBackground";
+import "@/styles/theme.css";
+import { ThemeProvider } from "@/lib/theme/context";
 
 export const metadata: Metadata = {
   title: "LifeOS — Your autonomous health agent",
@@ -9,10 +10,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="relative">
-        <InteractiveBackground />
-        <div className="relative z-[1] w-full">{children}</div>
+        <ThemeProvider>
+          <div className="relative w-full">{children}</div>
+        </ThemeProvider>
       </body>
     </html>
   );

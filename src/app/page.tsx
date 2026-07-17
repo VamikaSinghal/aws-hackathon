@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Activity, Brain, Zap, Moon, Shield, Database, Cloud, Lock,
   ArrowRight, ChevronDown, RefreshCw, Target, TrendingUp, AlertCircle,
@@ -31,6 +32,7 @@ function Nav() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-body-sm text-[#859984] font-medium hidden sm:block">Sign in</span>
+          <ThemeToggle />
           <Link href="/dashboard" className="bg-[#7fee64] text-black text-body-sm font-medium px-4 py-2 rounded-pills hover:bg-[#9fff80] transition-colors">
             Launch App
           </Link>
@@ -426,6 +428,103 @@ function Architecture() {
   );
 }
 
+/* ── LIVE ORCHESTRATION TEASER ─────────────────── */
+function OrchestrationTeaser() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const sponsors = [
+    { icon: Database, name: "Nexla", color: "#9cbf93", desc: "Collects unified health data" },
+    { icon: Brain, name: "Zero.xyz", color: "#aed2a4", desc: "Agents debate & plan" },
+    { icon: Cloud, name: "AWS", color: "#7fee64", desc: "Orchestrates execution" },
+    { icon: Lock, name: "Pomerium", color: "#aed2a4", desc: "Authorizes actions" },
+    { icon: Server, name: "Akash", color: "#9cbf93", desc: "Runs 24/7 decentralized" },
+  ];
+
+  useEffect(() => {
+    const i = setInterval(() => setActiveIndex(idx => (idx + 1) % sponsors.length), 2000);
+    return () => clearInterval(i);
+  }, []);
+
+  return (
+    <section id="orchestration" className="py-24 px-6 bg-[#181818]">
+      <div className="max-w-page mx-auto">
+        <div className="text-center mb-16">
+          <span className="text-caption font-medium uppercase tracking-[0.6px] text-[#9cbf93] block mb-3">Live Orchestration</span>
+          <h2 className="font-display text-heading-lg text-[#ddffdc] mb-4">Watch sponsors work<br />together in real time.</h2>
+          <p className="text-body text-[#8cab87] max-w-lg mx-auto">Each sponsor plays a structural role. Data flows through layers. Agents debate. Actions get authorized.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Sponsor rotation */}
+          <div className="space-y-6">
+            <div className="bg-[#000000] rounded-cards border border-[#485346]/40 p-8 min-h-64 flex flex-col justify-center items-center text-center">
+              {sponsors.map((s, i) => {
+                const Icon = s.icon;
+                const isActive = i === activeIndex;
+                return (
+                  <div
+                    key={s.name}
+                    className={`transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute'}`}
+                  >
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 rounded-cards bg-[#181818] border-2 border-[#485346]/40 flex items-center justify-center"
+                        style={{ borderColor: `${s.color}40` }}>
+                        <Icon size={28} style={{ color: s.color }} />
+                      </div>
+                    </div>
+                    <p className="text-body-sm font-medium text-[#ddffdc] mb-2">{s.name}</p>
+                    <p className="text-caption text-[#8cab87]">{s.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-1 justify-center">
+              {sponsors.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className={`h-1 rounded-full transition-all ${i === activeIndex ? 'w-8 bg-[#7fee64]' : 'w-2 bg-[#485346]'}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Data flow visualization */}
+          <div className="bg-[#000000] rounded-cards border border-[#485346]/40 p-8">
+            <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">The 6-step loop</p>
+            <div className="space-y-3">
+              {['Collect', 'Diagnose', 'Plan', 'Act', 'Observe', 'Learn'].map((stage, i) => (
+                <div key={stage} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-cards bg-[#181818] border border-[#485346]/40 flex items-center justify-center text-caption font-mono text-[#7fee64]">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-body-sm text-[#ddffdc] font-medium">{stage}</p>
+                    <p className="text-caption text-[#677d64]">{
+                      stage === 'Collect' ? 'Nexla gathers data' :
+                      stage === 'Diagnose' ? 'AWS + Zero.xyz analyze' :
+                      stage === 'Plan' ? 'Multi-agent debate' :
+                      stage === 'Act' ? 'Pomerium authorizes' :
+                      stage === 'Observe' ? 'Akash tracks outcomes' :
+                      'DynamoDB learns'
+                    }</p>
+                  </div>
+                  {i < 5 && <ArrowRight size={16} className="text-[#485346]" />}
+                </div>
+              ))}
+            </div>
+
+            <Link href="/demo"
+              className="mt-8 w-full flex items-center justify-center gap-2 bg-[#7fee64]/10 border border-[#7fee64]/30 text-[#7fee64] font-medium px-4 py-3 rounded-pills hover:bg-[#7fee64]/20 transition-colors">
+              Explore live demo <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ── SPONSORS ─────────────────────────────────── */
 function Sponsors() {
   const sponsors = [
@@ -569,6 +668,7 @@ export default function LandingPage() {
       <Solution />
       <Workflow />
       <Architecture />
+      <OrchestrationTeaser />
       <Sponsors />
       <CTA />
       <Footer />

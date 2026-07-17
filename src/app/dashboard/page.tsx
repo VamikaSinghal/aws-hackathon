@@ -1,436 +1,754 @@
-"use client";
-import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+'use client';
+
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
-  Activity, Brain, Moon, Zap, Target, TrendingUp, AlertCircle,
-  CheckCircle, RefreshCw, Database, Cloud, Lock, Server, ArrowLeft,
-  ChevronRight, Clock, BarChart2, GitBranch, Eye, Cpu, Shield,
-  X, Play, Pause, RotateCcw
-} from "lucide-react";
+  Activity, Brain, Zap, Database, Cloud, Lock, Server, ArrowLeft,
+  ChevronRight, Play, Pause, RotateCcw, Settings, Home, Workflow,
+  TrendingUp, CheckCircle, AlertCircle
+} from 'lucide-react';
+import { RealTimeMetrics } from '@/components/orchestration/RealTimeMetrics';
+import { OrchestrationDataFlow } from '@/components/orchestration/OrchestrationDataFlow';
+import { AgentReasoningTimeline } from '@/components/orchestration/AgentReasoningTimeline';
+import { ReasoningLog } from '@/components/orchestration/ReasoningLog';
+import { getOrchestrator } from '@/lib/orchestration/orchestrator';
 
-/* ── TYPES ──────────────────────────────────────── */
-type LoopStage = "collect" | "diagnose" | "plan" | "act" | "observe" | "learn";
-interface LogEntry { time: string; stage: LoopStage; message: string; sponsor: string; }
-interface Experiment { id: number; strategy: string; days: number; result: "success" | "failed" | "running"; metric: string; delta: string; }
+type TabType = 'sources' | 'overview' | 'agents' | 'sponsors' | 'actions' | 'metrics' | 'history';
 
-/* ── DATA ───────────────────────────────────────── */
-const STAGES: { id: LoopStage; label: string; icon: typeof Activity; sponsor: string; color: string }[] = [
-  { id: "collect",  label: "Collect",  icon: Database,  sponsor: "Nexla",    color: "#9cbf93" },
-  { id: "diagnose", label: "Diagnose", icon: Brain,     sponsor: "Zero.xyz", color: "#aed2a4" },
-  { id: "plan",     label: "Plan",     icon: GitBranch, sponsor: "Zero.xyz", color: "#aed2a4" },
-  { id: "act",      label: "Act",      icon: Zap,       sponsor: "Pomerium", color: "#7fee64" },
-  { id: "observe",  label: "Observe",  icon: Eye,       sponsor: "Nexla",    color: "#9cbf93" },
-  { id: "learn",    label: "Learn",    icon: RefreshCw, sponsor: "AWS",      color: "#aed2a4" },
-];
-
-const LOOP_MESSAGES: Record<LoopStage, string[]> = {
-  collect:  ["Nexla pulling Oura sleep data…", "HRV stream: 28ms detected", "Calendar sync: HIIT 7am found", "Gmail scan: late meeting flagged", "Nutrition log: protein deficit -22g", "Weather: 18°C, clear — walk viable"],
-  diagnose: ["Zero.xyz → Planner agent initialised", "Zero.xyz → Critic agent initialised", "Recovery score calculated: 23%", "Cortisol pattern: elevated overnight", "Sleep debt: 2.3h accumulated", "Diagnosis: sympathetic NS dominant"],
-  plan:     ["Planner: keep HIIT workout", "Critic: BLOCK — HRV too low", "Planner: propose light walk instead", "Critic: APPROVE — 20min walk safe", "Nutrition: +30g protein target", "Consensus reached in 4 iterations"],
-  act:      ["Pomerium: auth request → APPROVED", "Calendar: HIIT cancelled", "Calendar: 20min walk added 7:30am", "Alarm: moved to 7:30am", "Device: screen block set 10:30pm", "Notification: magnesium reminder 9pm"],
-  observe:  ["Nexla: next-morning data incoming", "Sleep score: 23% → 71% (+208%)", "HRV: 28ms → 51ms recovered", "Screen block compliance: 94%", "Walk completed: ✓ 22 minutes", "Protein target met: 134g"],
-  learn:    ["AWS DynamoDB: writing strategy log", "Screen blocking: HIGH efficacy → locked", "Early alarm: NEUTRAL → deprioritised", "New hypothesis: alcohol cutoff 7pm", "Strategy changelog updated", "Loop iteration complete ✓"],
-};
-
-const EXPERIMENTS: Experiment[] = [
-  { id: 1, strategy: "Early bedtime nudges",          days: 3,  result: "failed",  metric: "Sleep score",   delta: "+0%" },
-  { id: 2, strategy: "Screen blocking after 10:30pm", days: 7,  result: "success", metric: "Sleep score",   delta: "+31%" },
-  { id: 3, strategy: "Caffeine cutoff 1pm",           days: 5,  result: "success", metric: "HRV",           delta: "+18%" },
-  { id: 4, strategy: "Post-workout protein timing",   days: 4,  result: "failed",  metric: "Recovery",      delta: "+2%" },
-  { id: 5, strategy: "20min morning walk on red days", days: 12, result: "success", metric: "Recovery",     delta: "+44%" },
-  { id: 6, strategy: "Alcohol cutoff 7pm",            days: 2,  result: "running", metric: "Deep sleep",    delta: "…" },
-];
-
-/* ── HELPERS ─────────────────────────────────────── */
-function now() { return new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
-function SponsorBadge({ name }: { name: string }) {
-  return <span className="text-caption text-[#677d64] bg-[#212525] border border-[#485346]/30 rounded-pills px-2 py-0.5 font-mono">{name}</span>;
-}
-function StatusDot({ active }: { active: boolean }) {
-  return <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? "bg-[#7fee64] animate-pulse" : "bg-[#485346]"}`} />;
-}
-
-/* ── NAV ─────────────────────────────────────────── */
-function DashNav({ running, onToggle, onReset }: { running: boolean; onToggle: () => void; onReset: () => void }) {
-  return (
-    <nav className="sticky top-0 z-50 bg-[#212525]/95 backdrop-blur border-b border-[#1f2a33] h-14 flex items-center px-6 gap-4">
-      <Link href="/" className="flex items-center gap-1.5 text-[#8cab87] hover:text-[#ddffdc] transition-colors text-body-sm">
-        <ArrowLeft size={14} /> <span className="hidden sm:block">Back</span>
-      </Link>
-      <div className="h-4 w-px bg-[#485346]/40" />
-      <div className="flex items-center gap-2 flex-1">
-        <div className="w-5 h-5 rounded-sm flex items-center justify-center" style={{ background: "linear-gradient(135deg,#7fee64,#18b759)" }}>
-          <Activity size={10} className="text-black" />
-        </div>
-        <span className="font-display text-[#ddffdc] text-sm font-medium">LifeOS</span>
-        <span className="text-caption text-[#677d64] hidden sm:block">/ Dashboard</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="hidden sm:flex items-center gap-1.5">
-          <StatusDot active={running} />
-          <span className="text-caption text-[#8cab87]">{running ? "Agent running" : "Agent paused"}</span>
-        </div>
-        <button onClick={onReset} className="w-8 h-8 rounded-cards border border-[#485346]/40 flex items-center justify-center text-[#677d64] hover:text-[#9cbf93] hover:border-[#485346] transition-all">
-          <RotateCcw size={13} />
-        </button>
-        <button onClick={onToggle} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pills text-caption font-medium transition-all ${running ? "bg-[#181818] border border-[#485346] text-[#8cab87] hover:text-[#ddffdc]" : "bg-[#7fee64] text-black hover:bg-[#9fff80]"}`}>
-          {running ? <><Pause size={11} /> Pause</> : <><Play size={11} /> Run</>}
-        </button>
-      </div>
-    </nav>
-  );
-}
-
-/* ── GOAL CARD ───────────────────────────────────── */
-function GoalCard() {
-  const goals = [
-    { label: "Lose 20 lbs", progress: 38, current: "7.6 lbs lost" },
-    { label: "Increase energy", progress: 62, current: "Score: 6.2/10" },
-    { label: "Improve sleep", progress: 71, current: "Avg 7.1h / 78 score" },
-  ];
-  return (
-    <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <Target size={15} className="text-[#9cbf93]" />
-          <span className="text-body-sm font-medium text-[#ddffdc]">Goals</span>
-        </div>
-        <span className="text-caption text-[#677d64]">Day 23</span>
-      </div>
-      <div className="space-y-4">
-        {goals.map(({ label, progress, current }) => (
-          <div key={label}>
-            <div className="flex justify-between mb-1.5">
-              <span className="text-body-sm text-[#8cab87]">{label}</span>
-              <span className="text-caption text-[#ddffdc] font-medium">{current}</span>
-            </div>
-            <div className="h-1 bg-[#212525] rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-[#7fee64] transition-all duration-1000" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── HEALTH SCORE ────────────────────────────────── */
-function HealthScoreCard({ stage }: { stage: LoopStage }) {
-  const score = stage === "observe" || stage === "learn" ? 71 : 23;
-  const metrics = [
-    { label: "HRV",      value: stage === "observe" || stage === "learn" ? "51ms" : "28ms", good: stage !== "collect" && stage !== "diagnose" },
-    { label: "Sleep",    value: "7h 12m", good: true },
-    { label: "Steps",    value: "8,240",  good: true },
-    { label: "Recovery", value: stage === "observe" || stage === "learn" ? "71%" : "23%", good: stage === "observe" || stage === "learn" },
-  ];
-  return (
-    <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <BarChart2 size={15} className="text-[#9cbf93]" />
-        <span className="text-body-sm font-medium text-[#ddffdc]">Current Health Score</span>
-        <SponsorBadge name="Nexla" />
-      </div>
-      <div className="flex items-center gap-6 mb-5">
-        <div className="relative w-20 h-20 flex-shrink-0">
-          <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-            <circle cx="40" cy="40" r="32" fill="none" stroke="#212525" strokeWidth="6" />
-            <circle cx="40" cy="40" r="32" fill="none" stroke="#7fee64" strokeWidth="6"
-              strokeDasharray={`${score / 100 * 201} 201`} strokeLinecap="round"
-              style={{ transition: "stroke-dasharray 1s ease" }} />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-[#ddffdc] text-lg font-medium leading-none">{score}</span>
-            <span className="text-caption text-[#677d64]">/100</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3 flex-1">
-          {metrics.map(({ label, value, good }) => (
-            <div key={label}>
-              <p className="text-caption text-[#677d64] mb-0.5">{label}</p>
-              <p className={`text-body-sm font-medium ${good ? "text-[#ddffdc]" : "text-[#8cab87]"}`}>{value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── BOTTLENECK ──────────────────────────────────── */
-function BottleneckCard({ stage }: { stage: LoopStage }) {
-  const bottleneck = stage === "learn" || stage === "observe"
-    ? { issue: "Sleep consistency", severity: "medium", detail: "Bedtime varies ±90min across weekdays. Circadian rhythm instability limiting HRV ceiling.", action: "Testing: fixed 10:30pm wind-down trigger" }
-    : { issue: "Sleep debt accumulation", severity: "high", detail: "4h 52m last night. HRV crashed to 28ms. Sympathetic nervous system dominant. All training today would deepen the deficit.", action: "Immediate: cancel workout, prioritise recovery" };
-  return (
-    <div className={`bg-[#181818] rounded-cards border p-6 transition-all duration-500 ${bottleneck.severity === "high" ? "border-[#485346] glow-lime" : "border-[#485346]/40"}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <AlertCircle size={15} className={bottleneck.severity === "high" ? "text-[#7fee64]" : "text-[#9cbf93]"} />
-        <span className="text-body-sm font-medium text-[#ddffdc]">Current Bottleneck</span>
-        {bottleneck.severity === "high" && (
-          <span className="text-caption text-black bg-[#7fee64] rounded-pills px-2 py-0.5 font-medium ml-auto">High</span>
-        )}
-      </div>
-      <p className="text-body-sm font-medium text-[#ddffdc] mb-2">{bottleneck.issue}</p>
-      <p className="text-body-sm text-[#8cab87] mb-3 leading-relaxed">{bottleneck.detail}</p>
-      <div className="bg-[#212525] rounded-cards p-3 border border-[#485346]/30">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] mb-1">Agent response</p>
-        <p className="text-body-sm text-[#9cbf93]">{bottleneck.action}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── CURRENT EXPERIMENT ──────────────────────────── */
-function ExperimentCard() {
-  return (
-    <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <Cpu size={15} className="text-[#9cbf93]" />
-        <span className="text-body-sm font-medium text-[#ddffdc]">Current Experiment</span>
-        <div className="ml-auto flex items-center gap-1.5">
-          <StatusDot active={true} />
-          <span className="text-caption text-[#7fee64]">Day 2</span>
-        </div>
-      </div>
-      <div className="bg-[#212525] rounded-cards p-4 border border-[#485346]/30 mb-4">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] mb-2">Hypothesis</p>
-        <p className="text-body-sm text-[#ddffdc] font-medium mb-1">Alcohol cutoff at 7pm</p>
-        <p className="text-body-sm text-[#8cab87]">Predicts: +15% deep sleep, +8% HRV recovery. Based on pattern: 3/4 poor sleep nights correlate with evening drinks after 8pm.</p>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Metric", value: "Deep sleep" },
-          { label: "Baseline", value: "1h 12m" },
-          { label: "Target", value: "1h 23m" },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-[#000000] rounded-cards p-3 text-center">
-            <p className="text-caption text-[#677d64] mb-1">{label}</p>
-            <p className="text-body-sm font-medium text-[#ddffdc]">{value}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── SUGGESTED ACTIONS ───────────────────────────── */
-function SuggestedActionsCard({ stage }: { stage: LoopStage }) {
-  const allActions = [
-    { done: stage === "act" || stage === "observe" || stage === "learn", label: "Cancel 7am HIIT workout", sponsor: "Pomerium", icon: X },
-    { done: stage === "act" || stage === "observe" || stage === "learn", label: "Move alarm to 7:30am", sponsor: "Pomerium", icon: Clock },
-    { done: stage === "act" || stage === "observe" || stage === "learn", label: "Add 20min walk at 7:30am", sponsor: "Pomerium", icon: Activity },
-    { done: stage === "act" || stage === "observe" || stage === "learn", label: "Block screens after 10:30pm", sponsor: "Pomerium", icon: Shield },
-    { done: false, label: "Eat ≥134g protein today", sponsor: "–", icon: Target },
-    { done: false, label: "Last drink before 7pm", sponsor: "–", icon: Moon },
-  ];
-  return (
-    <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <Zap size={15} className="text-[#9cbf93]" />
-        <span className="text-body-sm font-medium text-[#ddffdc]">Suggested Actions</span>
-        <SponsorBadge name="Pomerium" />
-        <span className="ml-auto text-caption text-[#677d64]">{allActions.filter(a => a.done).length}/{allActions.length} done</span>
-      </div>
-      <div className="space-y-2.5">
-        {allActions.map(({ done, label, sponsor, icon: Icon }) => (
-          <div key={label} className={`flex items-center gap-3 p-3 rounded-cards border transition-all duration-300 ${done ? "bg-[#212525]/60 border-[#485346]/20" : "bg-[#212525] border-[#485346]/30"}`}>
-            <div className={`w-6 h-6 rounded-cards flex items-center justify-center flex-shrink-0 transition-all duration-300 ${done ? "bg-[#7fee64]/20 border border-[#7fee64]/30" : "bg-[#181818] border border-[#485346]/40"}`}>
-              {done ? <CheckCircle size={12} className="text-[#7fee64]" /> : <Icon size={11} className="text-[#677d64]" />}
-            </div>
-            <span className={`text-body-sm flex-1 transition-colors duration-300 ${done ? "text-[#677d64] line-through" : "text-[#8cab87]"}`}>{label}</span>
-            {sponsor !== "–" && <SponsorBadge name={sponsor} />}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── EXPERIMENT HISTORY ──────────────────────────── */
-function ExperimentHistoryCard() {
-  return (
-    <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <TrendingUp size={15} className="text-[#9cbf93]" />
-        <span className="text-body-sm font-medium text-[#ddffdc]">Experiment History</span>
-        <SponsorBadge name="AWS" />
-      </div>
-      <div className="space-y-2.5">
-        {EXPERIMENTS.map(({ id, strategy, days, result, metric, delta }) => (
-          <div key={id} className="flex items-start gap-3 p-3 bg-[#212525] rounded-cards border border-[#485346]/20">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${result === "success" ? "bg-[#7fee64]" : result === "running" ? "bg-[#9cbf93] animate-pulse" : "bg-[#677d64]"}`} />
-            <div className="flex-1 min-w-0">
-              <p className="text-body-sm text-[#ddffdc] font-medium leading-snug">{strategy}</p>
-              <p className="text-caption text-[#677d64] mt-0.5">{days} days · {metric}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className={`text-body-sm font-medium font-mono ${result === "success" ? "text-[#7fee64]" : result === "running" ? "text-[#9cbf93]" : "text-[#677d64]"}`}>{delta}</p>
-              <p className="text-caption text-[#677d64] capitalize">{result}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── AGENT LOOP PANEL ────────────────────────────── */
-function AgentLoopPanel({ stage, logs }: { stage: LoopStage; logs: LogEntry[] }) {
-  const stageIndex = STAGES.findIndex(s => s.id === stage);
-  return (
-    <div className="bg-[#000000] rounded-cards border border-[#485346] flex flex-col h-full min-h-[500px]">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-[#485346]/40">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-        </div>
-        <span className="text-caption text-[#677d64] font-mono ml-2">agent_loop.live</span>
-        <div className="ml-auto flex items-center gap-1.5">
-          <StatusDot active={true} />
-          <span className="text-caption text-[#7fee64] font-mono">RUNNING</span>
-        </div>
-      </div>
-
-      {/* Stage progress */}
-      <div className="px-5 py-4 border-b border-[#485346]/20">
-        <div className="flex items-center gap-1">
-          {STAGES.map(({ id, label, icon: Icon, color }, i) => (
-            <div key={id} className="flex items-center gap-1 flex-1">
-              <div className={`flex flex-col items-center gap-1 flex-1 transition-all duration-500 ${i === stageIndex ? "opacity-100" : i < stageIndex ? "opacity-60" : "opacity-25"}`}>
-                <div className={`w-7 h-7 rounded-cards border flex items-center justify-center transition-all duration-300 ${i === stageIndex ? "border-[#7fee64]/60 bg-[#181818] loop-active" : i < stageIndex ? "border-[#485346]/60 bg-[#181818]" : "border-[#485346]/20 bg-transparent"}`}>
-                  <Icon size={12} style={{ color: i <= stageIndex ? "#7fee64" : "#677d64" }} />
-                </div>
-                <span className="text-caption text-[#677d64] text-center leading-tight hidden sm:block" style={{ fontSize: "9px" }}>{label}</span>
-              </div>
-              {i < STAGES.length - 1 && (
-                <div className={`h-px flex-shrink-0 w-3 transition-all duration-500 ${i < stageIndex ? "bg-[#7fee64]/40" : "bg-[#485346]/20"}`} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Log stream */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-1.5 scrollbar-hide font-mono text-body-sm">
-        {logs.length === 0 && (
-          <p className="text-[#677d64] text-caption">Waiting for agent cycle to begin…<span className="animate-blink">█</span></p>
-        )}
-        {logs.map((log, i) => (
-          <div key={i} className="flex items-start gap-2 animate-loop-appear">
-            <span className="text-[#677d64] text-caption flex-shrink-0 mt-0.5 tabular-nums">{log.time}</span>
-            <span className={`text-caption rounded-pills px-1.5 py-0.5 flex-shrink-0 font-mono ${
-              log.stage === "act" ? "bg-[#7fee64]/15 text-[#7fee64]" :
-              log.stage === "collect" ? "bg-[#9cbf93]/10 text-[#9cbf93]" :
-              "bg-[#485346]/20 text-[#8cab87]"
-            }`}>{log.stage}</span>
-            <span className="text-[#8cab87] text-caption leading-relaxed">{log.message}</span>
-          </div>
-        ))}
-        {logs.length > 0 && (
-          <p className="text-[#7fee64] text-caption animate-blink">█</p>
-        )}
-      </div>
-
-      {/* Current stage detail */}
-      <div className="px-5 py-4 border-t border-[#485346]/20 bg-[#181818]/50">
-        {(() => {
-          const s = STAGES[stageIndex];
-          return (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <s.icon size={13} style={{ color: "#7fee64" }} />
-                <span className="text-body-sm font-medium text-[#ddffdc]">{s.label}</span>
-                <SponsorBadge name={s.sponsor} />
-              </div>
-              <ChevronRight size={14} className="text-[#677d64]" />
-            </div>
-          );
-        })()}
-      </div>
-    </div>
-  );
-}
-
-/* ── PAGE ────────────────────────────────────────── */
-export default function Dashboard() {
-  const [running, setRunning] = useState(true);
-  const [stageIndex, setStageIndex] = useState(0);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [msgIndex, setMsgIndex] = useState(0);
-  const [iteration, setIteration] = useState(1);
-
-  const stage = STAGES[stageIndex].id;
-
-  const reset = useCallback(() => {
-    setStageIndex(0); setLogs([]); setMsgIndex(0); setIteration(1); setRunning(false);
-    setTimeout(() => setRunning(true), 100);
-  }, []);
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [state, setState] = useState<any>(null);
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    if (!running) return;
-    const messages = LOOP_MESSAGES[stage];
-    if (msgIndex >= messages.length) {
-      const timer = setTimeout(() => {
-        const next = (stageIndex + 1) % STAGES.length;
-        setStageIndex(next);
-        setMsgIndex(0);
-        if (next === 0) setIteration(i => i + 1);
-      }, 600);
-      return () => clearTimeout(timer);
+    const orchestrator = getOrchestrator();
+    setState(orchestrator.getState());
+
+    const unsubscribe = orchestrator.subscribeToEvents(() => {
+      setState(orchestrator.getState());
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleStartLoop = async () => {
+    setRunning(true);
+    try {
+      const orchestrator = getOrchestrator();
+      await orchestrator.startLoop();
+      setState(orchestrator.getState());
+    } finally {
+      setRunning(false);
     }
-    const timer = setTimeout(() => {
-      setLogs(prev => [...prev.slice(-60), {
-        time: now(),
-        stage,
-        message: messages[msgIndex],
-        sponsor: STAGES[stageIndex].sponsor,
-      }]);
-      setMsgIndex(i => i + 1);
-    }, 700);
-    return () => clearTimeout(timer);
-  }, [running, stage, stageIndex, msgIndex]);
+  };
+
+  const handleReset = () => {
+    const orchestrator = getOrchestrator();
+    orchestrator.reset();
+    setState(orchestrator.getState());
+  };
+
+  if (!state) return <div className="text-center py-20 text-[#677d64]">Loading orchestrator...</div>;
+
+  const currentLoop = state.currentLoop;
+  const stage = currentLoop.currentStage as any;
+
+  const navItems: Array<{ id: TabType; label: string; icon: React.ReactNode; desc: string }> = [
+    { id: 'sources', label: 'Data Sources', icon: <Database size={18} />, desc: 'Connected health apps' },
+    { id: 'overview', label: 'Loop Overview', icon: <Home size={18} />, desc: 'Current stage & progress' },
+    { id: 'agents', label: 'Agent Reasoning', icon: <Brain size={18} />, desc: 'Multi-agent debate' },
+    { id: 'sponsors', label: 'Sponsor Flow', icon: <Workflow size={18} />, desc: 'Data coordination' },
+    { id: 'actions', label: 'Actions Pipeline', icon: <Zap size={18} />, desc: 'Proposed to executed' },
+    { id: 'metrics', label: 'Health Metrics', icon: <TrendingUp size={18} />, desc: 'Before & after' },
+    { id: 'history', label: 'Strategy History', icon: <CheckCircle size={18} />, desc: 'Past outcomes' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#000000]">
-      <DashNav running={running} onToggle={() => setRunning(r => !r)} onReset={reset} />
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-[#181818] dark:bg-[#212525]/95 backdrop-blur border-b border-[#333333] dark:border-[#1f2a33] h-16 flex items-center px-6">
+        <Link href="/" className="flex items-center gap-2 text-[#8cab87] hover:text-[#ddffdc] transition-colors">
+          <ArrowLeft size={16} />
+          <span className="text-body-sm font-medium">Back</span>
+        </Link>
+        <div className="h-4 w-px bg-[#485346]/40 mx-4" />
+        <div className="flex-1 flex items-center gap-2">
+          <div className="w-5 h-5 rounded-sm flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7fee64,#18b759)' }}>
+            <Activity size={10} className="text-black" />
+          </div>
+          <span className="font-display text-[#ddffdc] text-sm font-medium">LifeOS</span>
+          <span className="text-caption text-[#677d64]">/ Agent Dashboard</span>
+        </div>
 
-      {/* Top bar */}
-      <div className="border-b border-[#485346]/20 bg-[#181818]/30">
-        <div className="max-w-page mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <StatusDot active={running} />
-              <span className="text-body-sm text-[#8cab87]">Loop iteration <span className="text-[#ddffdc] font-medium font-mono">#{iteration}</span></span>
-            </div>
-            <div className="h-3 w-px bg-[#485346]/40 hidden sm:block" />
-            <span className="text-body-sm text-[#677d64] hidden sm:block">Stage: <span className="text-[#9cbf93] font-medium capitalize">{stage}</span></span>
+        {/* Header controls */}
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${running ? 'bg-[#7fee64] animate-pulse' : 'bg-[#677d64]'}`} />
+            <span className="text-caption text-[#8cab87]">
+              {running ? 'Processing' : 'Ready'} • Loop #{currentLoop.loopNumber}
+            </span>
           </div>
-          <div className="flex items-center gap-3">
-            {["Nexla", "Zero.xyz", "AWS", "Pomerium", "Akash"].map(s => (
-              <span key={s} className="text-caption text-[#677d64] font-mono hidden lg:block">{s}</span>
-            ))}
-          </div>
+
+          <button
+            onClick={handleStartLoop}
+            disabled={running}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pills bg-[#7fee64] text-black text-caption font-medium hover:bg-[#9fff80] transition-colors disabled:opacity-50"
+          >
+            <Play size={12} />
+            Start
+          </button>
+
+          <button
+            onClick={handleReset}
+            className="w-8 h-8 rounded-cards border border-[#485346]/40 flex items-center justify-center text-[#677d64] hover:text-[#9cbf93]"
+            title="Reset"
+          >
+            <RotateCcw size={14} />
+          </button>
+
+          <ThemeToggle />
         </div>
       </div>
 
-      <div className="max-w-page mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 border-r border-[#333333] dark:border-[#485346]/40 bg-[#f5f5f5] dark:bg-[#181818] min-h-screen">
+          <div className="p-6 space-y-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-start gap-3 px-4 py-3 rounded-cards transition-all ${
+                  activeTab === item.id
+                    ? 'bg-[#7fee64]/10 border border-[#7fee64]/30'
+                    : 'border border-transparent hover:bg-[#212525]'
+                }`}
+              >
+                <div className={activeTab === item.id ? 'text-[#7fee64]' : 'text-[#677d64]'}>
+                  {item.icon}
+                </div>
+                <div className="text-left">
+                  <p className={`text-body-sm font-medium ${activeTab === item.id ? 'text-[#7fee64]' : 'text-[#ddffdc]'}`}>
+                    {item.label}
+                  </p>
+                  <p className="text-caption text-[#677d64]">{item.desc}</p>
+                </div>
+                {activeTab === item.id && <ChevronRight size={14} className="ml-auto text-[#7fee64]" />}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          {/* Left — agent loop live */}
-          <div className="xl:col-span-1">
-            <AgentLoopPanel stage={stage} logs={logs} />
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="max-w-6xl mx-auto px-8 py-8">
+            {activeTab === 'sources' && <DataSourcesPage />}
+            {activeTab === 'overview' && <LoopOverview loop={currentLoop} state={state} stage={stage} />}
+            {activeTab === 'agents' && <AgentReasoningPage loop={currentLoop} stage={stage} />}
+            {activeTab === 'sponsors' && <SponsorFlowPage loop={currentLoop} stage={stage} />}
+            {activeTab === 'actions' && <ActionsPipelinePage loop={currentLoop} />}
+            {activeTab === 'metrics' && <HealthMetricsPage loop={currentLoop} />}
+            {activeTab === 'history' && <StrategyHistoryPage state={state} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── LOOP OVERVIEW PAGE ──────────────────────── */
+function LoopOverview({ loop, state, stage }: any) {
+  const stages = ['Collect', 'Diagnose', 'Plan', 'Act', 'Observe', 'Learn'];
+  const currentStageIndex = stages.indexOf(stage);
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Current Loop Progress</h1>
+        <p className="text-body text-[#8cab87]">Loop #{loop.loopNumber} • Observing agent workflow with sponsor coordination</p>
+      </div>
+
+      {/* Progress indicator */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <div className="space-y-6">
+          {stages.map((s, idx) => {
+            const isCompleted = idx < currentStageIndex;
+            const isCurrent = idx === currentStageIndex;
+            const stageInfo = loop.stages[s as keyof typeof loop.stages];
+            const sponsor = Array.isArray(stageInfo.sponsor) ? stageInfo.sponsor.join(', ') : stageInfo.sponsor;
+
+            return (
+              <div key={s} className="flex gap-4 items-start">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-cards border-2 flex items-center justify-center font-medium ${
+                      isCurrent
+                        ? 'bg-[#7fee64]/20 border-[#7fee64]'
+                        : isCompleted
+                          ? 'bg-[#7fee64]/10 border-[#7fee64]'
+                          : 'bg-[#212525] border-[#485346]'
+                    }`}
+                  >
+                    <span
+                      className={isCurrent || isCompleted ? 'text-[#7fee64]' : 'text-[#677d64]'}
+                    >
+                      {idx + 1}
+                    </span>
+                  </div>
+                  {idx < stages.length - 1 && (
+                    <div
+                      className="w-0.5 h-12 my-1"
+                      style={{ backgroundColor: isCompleted ? '#7fee64' : '#485346' }}
+                    />
+                  )}
+                </div>
+
+                <div className="flex-1 pt-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-body-sm font-medium text-[#ddffdc]">{s}</h3>
+                    <span className={`text-caption px-2 py-1 rounded-pills ${
+                      isCurrent ? 'bg-[#7fee64]/10 text-[#7fee64]' :
+                      isCompleted ? 'bg-[#7fee64]/10 text-[#7fee64]' :
+                      'bg-[#212525] text-[#677d64]'
+                    }`}>
+                      {stageInfo.status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <p className="text-caption text-[#8cab87]">
+                      <span className="text-[#677d64]">Sponsor:</span> {sponsor}
+                    </p>
+                    {isCurrent && (
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 rounded-full bg-[#7fee64] animate-pulse" />
+                        <span className="text-caption text-[#7fee64]">Active</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {isCurrent && (
+                    <p className="text-caption text-[#677d64] mt-2">
+                      Processing: {Math.round((Date.now() - stageInfo.startedAt) / 100) / 10}s elapsed
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Actions Proposed</p>
+          <p className="text-heading-sm text-[#7fee64]">{loop.proposedActions.length}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Actions Approved</p>
+          <p className="text-heading-sm text-[#7fee64]">{loop.approvedActions.length}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Actions Executed</p>
+          <p className="text-heading-sm text-[#7fee64]">{loop.executedActions.length}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Agent Messages</p>
+          <p className="text-heading-sm text-[#7fee64]">{loop.agentMessages.length}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── AGENT REASONING PAGE ────────────────────── */
+function AgentReasoningPage({ loop, stage }: any) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Agent Reasoning Process</h1>
+        <p className="text-body text-[#8cab87]">Watch how Planner, Critic, and Experts debate and reach consensus</p>
+      </div>
+
+      {/* Main reasoning timeline */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Multi-Agent Debate</p>
+        <AgentReasoningTimeline reasoning={loop.reasoning} />
+      </div>
+
+      {/* Agent messages */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Agent Thoughts ({loop.agentMessages.length})</p>
+        <ReasoningLog
+          agentMessages={loop.agentMessages}
+          sponsorMessages={[]}
+          maxHeight="max-h-96"
+        />
+      </div>
+
+      {/* Current stage focus */}
+      <div className="bg-[#212525]/50 rounded-cards border border-[#485346]/40 p-6">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-3">Current Stage</p>
+        <p className="text-body text-[#ddffdc] font-medium">{stage}</p>
+        <p className="text-caption text-[#8cab87] mt-2">
+          {stage === 'Diagnose' && 'Agents analyzing health metrics and identifying patterns...'}
+          {stage === 'Plan' && 'Multi-agent debate on proposed actions and refinements...'}
+          {stage === 'Act' && 'Approved actions being authorized and executed...'}
+          {stage === 'Collect' && 'Gathering unified health data from all sources...'}
+          {stage === 'Observe' && 'Tracking outcomes and real-world impact...'}
+          {stage === 'Learn' && 'Recording results and updating strategy database...'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── SPONSOR FLOW PAGE ─────────────────────── */
+function SponsorFlowPage({ loop, stage }: any) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Sponsor Coordination</h1>
+        <p className="text-body text-[#8cab87]">Data flowing between Nexla, AWS, Zero.xyz, Pomerium, and Akash</p>
+      </div>
+
+      {/* Data flow visualization */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Live Data Flow</p>
+        <OrchestrationDataFlow stage={stage} />
+      </div>
+
+      {/* Sponsor messages log */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Sponsor Messages ({loop.sponsorMessages.length})</p>
+        <ReasoningLog
+          agentMessages={[]}
+          sponsorMessages={loop.sponsorMessages}
+          stage={stage}
+          maxHeight="max-h-96"
+        />
+      </div>
+
+      {/* Sponsor status */}
+      <div className="grid grid-cols-5 gap-4">
+        {['Nexla', 'Zero.xyz', 'AWS', 'Pomerium', 'Akash'].map((sponsor) => (
+          <div key={sponsor} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4 text-center">
+            <p className="text-body-sm font-medium text-[#ddffdc] mb-2">{sponsor}</p>
+            <div className="w-2 h-2 rounded-full bg-[#7fee64] mx-auto mb-2" />
+            <p className="text-caption text-[#8cab87]">Online</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── ACTIONS PIPELINE PAGE ──────────────────── */
+function ActionsPipelinePage({ loop }: any) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Actions Pipeline</h1>
+        <p className="text-body text-[#8cab87]">From proposal through authorization to execution</p>
+      </div>
+
+      {/* Pipeline stages */}
+      <div className="space-y-6">
+        {['Proposed', 'Approved', 'Executed'].map((stage, idx) => {
+          const actions = stage === 'Proposed' ? loop.proposedActions :
+                         stage === 'Approved' ? loop.approvedActions :
+                         loop.executedActions;
+
+          return (
+            <div key={stage} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-cards bg-[#212525] border border-[#485346]/40 flex items-center justify-center text-sm font-medium text-[#7fee64]">
+                  {idx + 1}
+                </div>
+                <h3 className="text-body-sm font-medium text-[#ddffdc]">{stage} Actions</h3>
+                <span className="text-caption text-[#8cab87]">({actions.length})</span>
+              </div>
+
+              <div className="space-y-2">
+                {actions.length === 0 ? (
+                  <p className="text-caption text-[#677d64]">No actions in this stage</p>
+                ) : (
+                  actions.map((action: any) => (
+                    <div key={action.id} className="flex gap-3 p-3 bg-[#212525]/50 rounded-cards border border-[#485346]/20">
+                      <div className="flex-1">
+                        <p className="text-body-sm text-[#ddffdc] font-medium">{action.action}</p>
+                        <p className="text-caption text-[#8cab87]">{action.rationale}</p>
+                        <div className="flex gap-2 mt-2">
+                          <span className={`text-caption px-2 py-0.5 rounded-pills ${
+                            action.urgency === 'high' ? 'bg-[#aed2a4]/10 text-[#aed2a4]' :
+                            action.urgency === 'medium' ? 'bg-[#9cbf93]/10 text-[#9cbf93]' :
+                            'bg-[#485346]/20 text-[#677d64]'
+                          }`}>
+                            {action.urgency} urgency
+                          </span>
+                          <span className="text-caption text-[#677d64]">via {action.executor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── HEALTH METRICS PAGE ────────────────────── */
+function HealthMetricsPage({ loop }: any) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Health Metrics</h1>
+        <p className="text-body text-[#8cab87]">Before and after impact of executed actions</p>
+      </div>
+
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <RealTimeMetrics
+          current={loop.healthMetrics}
+          previous={loop.previousMetrics}
+        />
+      </div>
+
+      {/* Improvement summary */}
+      {loop.outcome && (
+        <div className="bg-[#181818] rounded-cards border border-[#7fee64]/30 p-6">
+          <p className="text-caption text-[#7fee64] uppercase tracking-[0.6px] font-medium mb-3">Loop Outcome</p>
+          <p className="text-body-sm text-[#8cab87] mb-4">{loop.outcome.summary}</p>
+          <div className="space-y-2">
+            {Object.entries(loop.outcome.metricsImprovement).map(([key, value]: any) => (
+              <div key={key} className="flex justify-between text-caption text-[#677d64]">
+                <span className="capitalize">{key}</span>
+                <span className="text-[#7fee64]">Improved ✓</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── STRATEGY HISTORY PAGE ─────────────────── */
+function StrategyHistoryPage({ state }: any) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Strategy History</h1>
+        <p className="text-body text-[#8cab87]">Past loops and learning outcomes</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Total Loops</p>
+          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalLoops}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Actions Proposed</p>
+          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalActionsProposed}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Actions Approved</p>
+          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalActionsApproved}</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
+          <p className="text-caption text-[#677d64] mb-2">Avg Improvement</p>
+          <p className="text-heading-sm text-[#7fee64]">+{state.stats.averageRecoveryImprovement}%</p>
+        </div>
+      </div>
+
+      {/* Previous loops */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Recent Loops</p>
+        <div className="space-y-3">
+          {state.previousLoops.slice(0, 5).map((loop: any, idx: number) => (
+            <div key={loop.id} className="flex items-center justify-between p-3 bg-[#212525]/50 rounded-cards border border-[#485346]/20">
+              <div>
+                <p className="text-body-sm text-[#ddffdc] font-medium">Loop #{loop.loopNumber}</p>
+                <p className="text-caption text-[#677d64]">{loop.outcome?.summary || 'Processing...'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-body-sm font-medium text-[#8cab87]">{loop.outcome?.metricsImprovement?.recovery?.score ? `Recovery ${loop.outcome.metricsImprovement.recovery.score}%` : '—'}</p>
+                <p className="text-caption text-[#677d64]">{loop.executedActions.length} actions executed</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── DATA SOURCES PAGE ──────────────────────── */
+function DataSourcesPage() {
+  const [nexlaDataset, setNexlaDataset] = useState<any>(null);
+  const [connectionMode, setConnectionMode] = useState<'mock' | 'live'>('mock');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNexlaData = async () => {
+      try {
+        setLoading(true);
+
+        // Check connection status
+        const healthResponse = await fetch('/api/nexla/health');
+        const healthData = await healthResponse.json();
+        setConnectionMode(healthData.mode);
+
+        // Fetch dataset
+        const datasetResponse = await fetch('/api/nexla/dataset');
+        const datasetData = await datasetResponse.json();
+
+        if (datasetData.success) {
+          setNexlaDataset(datasetData.data);
+        }
+      } catch (error) {
+        console.error('Error fetching Nexla data:', error);
+        setConnectionMode('mock');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNexlaData();
+  }, []);
+
+  const dataSources = nexlaDataset?.sources || [
+    {
+      name: 'Whoop',
+      icon: '⌚',
+      category: 'Wearable',
+      status: 'connected',
+      lastSync: '2 min ago',
+      dataPoints: ['HRV', 'Strain', 'Recovery', 'Sleep Quality'],
+      color: '#7fee64',
+      description: 'Real-time fitness metrics and recovery tracking'
+    },
+    {
+      name: 'Apple Health',
+      icon: '🍎',
+      category: 'Mobile',
+      status: 'connected',
+      lastSync: '5 min ago',
+      dataPoints: ['Steps', 'Active Calories', 'Workouts', 'Resting HR'],
+      color: '#aed2a4',
+      description: 'iPhone health data and activity tracking'
+    },
+    {
+      name: 'Oura Ring',
+      icon: '💍',
+      category: 'Wearable',
+      status: 'connected',
+      lastSync: '3 min ago',
+      dataPoints: ['Sleep Score', 'Readiness', 'Activity', 'Body Temperature'],
+      color: '#9cbf93',
+      description: 'Advanced sleep and readiness analytics'
+    },
+    {
+      name: 'Google Calendar',
+      icon: '📅',
+      category: 'Schedule',
+      status: 'connected',
+      lastSync: '1 min ago',
+      dataPoints: ['Events', 'Free Time Blocks', 'Meeting Duration', 'Context'],
+      color: '#aed2a4',
+      description: 'Schedule and time availability'
+    },
+    {
+      name: 'Gmail',
+      icon: '📧',
+      category: 'Communication',
+      status: 'connected',
+      lastSync: '4 min ago',
+      dataPoints: ['Email Metadata', 'Urgency', 'Stress Signals', 'Work Patterns'],
+      color: '#9cbf93',
+      description: 'Email patterns for contextual stress analysis'
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Data Sources</h1>
+          <p className="text-body text-[#8cab87]">Loading Nexla data...</p>
+        </div>
+        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8 text-center">
+          <div className="inline-flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#7fee64] animate-pulse" />
+            <span className="text-[#8cab87]">Connecting to Nexla...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-heading-lg text-[#ddffdc] font-medium">Data Sources</h1>
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-pills ${
+            connectionMode === 'live' ? 'bg-[#7fee64]/10' : 'bg-[#9cbf93]/10'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${connectionMode === 'live' ? 'bg-[#7fee64]' : 'bg-[#9cbf93]'}`} />
+            <span className={`text-caption font-medium ${connectionMode === 'live' ? 'text-[#7fee64]' : 'text-[#9cbf93]'}`}>
+              {connectionMode === 'live' ? '🔴 Live Nexla' : '⚪ Mock Data'}
+            </span>
+          </div>
+        </div>
+        <p className="text-body text-[#8cab87]">
+          {connectionMode === 'live'
+            ? 'Connected to real Nexla API - receiving live health data from all sources'
+            : 'Using mock data - configure Nexla API for real data'}
+        </p>
+      </div>
+
+      {/* Data flow diagram */}
+      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Complete Data Flow</p>
+
+        <div className="flex items-center justify-between mb-8 px-4">
+          {/* Sources */}
+          <div className="flex flex-col gap-2">
+            <div className="text-caption text-[#677d64] font-medium uppercase">Sources</div>
+            <div className="flex gap-2">
+              {['Whoop', 'Apple', 'Oura', 'Calendar', 'Gmail'].map((s) => (
+                <div key={s} className="px-3 py-2 bg-[#212525] rounded-pills text-caption text-[#8cab87] border border-[#485346]/40">
+                  {s}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Right — dashboard panels */}
-          <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-            <GoalCard />
-            <HealthScoreCard stage={stage} />
-            <BottleneckCard stage={stage} />
-            <ExperimentCard />
-            <SuggestedActionsCard stage={stage} />
-            <ExperimentHistoryCard />
+          {/* Arrow */}
+          <div className="flex-1 flex items-center justify-center px-8">
+            <div className="flex-1 h-0.5 bg-gradient-to-r from-[#7fee64] to-transparent" />
+            <div className="text-caption text-[#8cab87] px-4 whitespace-nowrap">Real-time sync</div>
+            <div className="flex-1 h-0.5 bg-gradient-to-l from-[#7fee64] to-transparent" />
+          </div>
+
+          {/* Nexla */}
+          <div className="flex flex-col gap-2">
+            <div className="text-caption text-[#677d64] font-medium uppercase">Aggregation</div>
+            <div className="px-4 py-2 bg-[#7fee64]/10 rounded-pills text-body-sm text-[#7fee64] border border-[#7fee64]/30 font-medium">
+              Nexla Data Hub
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div className="flex-1 flex items-center justify-center px-8">
+            <div className="flex-1 h-0.5 bg-gradient-to-r from-[#9cbf93] to-transparent" />
+            <div className="text-caption text-[#8cab87] px-4 whitespace-nowrap">Unified context</div>
+            <div className="flex-1 h-0.5 bg-gradient-to-l from-[#9cbf93] to-transparent" />
+          </div>
+
+          {/* AWS/Orchestration */}
+          <div className="flex flex-col gap-2">
+            <div className="text-caption text-[#677d64] font-medium uppercase">Processing</div>
+            <div className="px-4 py-2 bg-[#9cbf93]/10 rounded-pills text-body-sm text-[#9cbf93] border border-[#9cbf93]/30 font-medium">
+              AWS + Agents
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="bg-[#212525]/50 rounded-cards p-4 text-caption text-[#8cab87]">
+          <p>
+            <span className="text-[#7fee64] font-medium">1. Collect:</span> All health data sources sync simultaneously to Nexla.
+            <br/>
+            <span className="text-[#7fee64] font-medium">2. Unify:</span> Nexla normalizes and combines data into a single health context.
+            <br/>
+            <span className="text-[#7fee64] font-medium">3. Process:</span> AWS Bedrock + Zero.xyz agents analyze patterns and recommend actions.
+            <br/>
+            <span className="text-[#7fee64] font-medium">4. Execute:</span> Pomerium authorizes and applies changes (calendar, notifications, etc.)
+          </p>
+        </div>
+      </div>
+
+      {/* Connected sources */}
+      <div className="space-y-4">
+        <h3 className="text-body-sm font-medium text-[#ddffdc]">Connected Sources</h3>
+
+        {dataSources.map((source: any) => (
+          <div key={source.name} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6 hover:border-[#485346] transition-all">
+            <div className="flex gap-4 mb-4">
+              {/* Icon and name */}
+              <div className="flex items-center gap-3">
+                <div className="text-4xl">{source.icon}</div>
+                <div>
+                  <p className="text-body-sm font-medium text-[#ddffdc]">{source.name}</p>
+                  <p className="text-caption text-[#677d64]">{source.category}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="ml-auto">
+                <div className="flex items-center gap-2 px-3 py-1 bg-[#7fee64]/10 rounded-pills">
+                  <div className="w-2 h-2 rounded-full bg-[#7fee64]" />
+                  <span className="text-caption text-[#7fee64] font-medium">Connected</span>
+                </div>
+                <p className="text-caption text-[#677d64] text-right mt-2">Last sync: {source.lastSync}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-body-sm text-[#8cab87] mb-4">{source.description}</p>
+
+            {/* Data points */}
+            <div className="flex flex-wrap gap-2">
+              {source.dataPoints.map((point: string) => (
+                <span
+                  key={point}
+                  className="text-caption px-2 py-1 rounded-pills bg-[#212525] border"
+                  style={{ borderColor: `${source.color}40`, color: source.color }}
+                >
+                  {point}
+                </span>
+              ))}
+            </div>
+
+            {/* Data flow indicator */}
+            <div className="mt-4 pt-4 border-t border-[#485346]/20 flex items-center gap-2">
+              <div className="text-caption text-[#677d64]">Flowing to:</div>
+              <div className="text-caption text-[#7fee64] font-medium">Nexla</div>
+              <div className="flex-1 h-0.5 bg-gradient-to-r from-[#7fee64]/50 to-transparent" />
+              <div className="text-caption text-[#9cbf93] font-medium">Agents</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div className="bg-[#212525]/50 rounded-cards border border-[#485346]/40 p-6 space-y-4">
+        <h3 className="text-body-sm font-medium text-[#ddffdc]">How LifeOS Uses Your Data</h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <p className="text-caption text-[#677d64] font-medium">🔄 Continuous Sync</p>
+            <p className="text-caption text-[#8cab87]">Data sources update every 1-5 minutes, providing real-time health context</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-caption text-[#677d64] font-medium">🧠 AI Analysis</p>
+            <p className="text-caption text-[#8cab87]">Agents analyze patterns: Is recovery low? Are you overbooked? Is sleep poor?</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-caption text-[#677d64] font-medium">✅ Smart Actions</p>
+            <p className="text-caption text-[#8cab87]">Move workouts, block screens, adjust plans—all authorized before execution</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-caption text-[#677d64] font-medium">📊 Outcomes Tracked</p>
+            <p className="text-caption text-[#8cab87]">Compare metrics before/after. Learn what works. Refine strategies daily</p>
           </div>
         </div>
       </div>

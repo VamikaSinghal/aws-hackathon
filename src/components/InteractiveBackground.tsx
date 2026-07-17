@@ -16,6 +16,29 @@ export default function InteractiveBackground() {
   const mouseRef = useRef({ x: 0, y: 0 });
   const blobsRef = useRef<Blob[]>([]);
   const animationRef = useRef<number>();
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    // Detect theme
+    const detectTheme = () => {
+      const theme = document.documentElement.getAttribute("data-theme");
+      setIsDark(theme !== "light");
+    };
+
+    detectTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(() => {
+      detectTheme();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,7 +59,12 @@ export default function InteractiveBackground() {
     };
 
     const initializeBlobs = () => {
-      const colors = ["#7fee64", "#9cbf93", "#aed2a4", "#18b759"];
+      // Dark mode colors
+      const darkColors = ["#7fee64", "#9cbf93", "#aed2a4", "#18b759"];
+      // Light mode colors
+      const lightColors = ["#22c55e", "#16a34a", "#4ade80", "#10b981"];
+      const colors = isDark ? darkColors : lightColors;
+
       blobsRef.current = [];
 
       for (let i = 0; i < 6; i++) {
@@ -47,7 +75,7 @@ export default function InteractiveBackground() {
           vy: (Math.random() - 0.5) * 2,
           radius: 100 + Math.random() * 120,
           color: colors[i % colors.length],
-          opacity: 0.08 + Math.random() * 0.06,
+          opacity: isDark ? 0.08 + Math.random() * 0.06 : 0.04 + Math.random() * 0.04,
         });
       }
     };
@@ -63,8 +91,9 @@ export default function InteractiveBackground() {
 
     // Animation loop
     const animate = () => {
-      // Clear canvas with semi-transparent dark background
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      // Clear canvas based on theme
+      const bgColor = isDark ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.08)";
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Enable blur filter
@@ -129,7 +158,9 @@ export default function InteractiveBackground() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [isDark]);
+
+  const bgColor = isDark ? "#000000" : "#f8f8f8";
 
   return (
     <canvas
@@ -138,7 +169,7 @@ export default function InteractiveBackground() {
       style={{
         zIndex: 0,
         display: "block",
-        backgroundColor: "#000000",
+        backgroundColor: bgColor,
       }}
     />
   );
