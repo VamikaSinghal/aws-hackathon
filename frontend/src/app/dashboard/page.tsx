@@ -808,15 +808,22 @@ function DataFlowPage({ backendState }: { backendState: AdaptiveHealthState | nu
   );
 }
 
-function ActionsPage({ stage }: any) {
+function ActionsPage({ stage, backendState }: { stage: Stage; backendState: AdaptiveHealthState | null }) {
   const done = stage === "act" || stage === "observe" || stage === "learn";
-  const items = [
-    { label: "Cancel 7am HIIT workout", chip: "Pomerium", icon: X, done: done },
-    { label: "Move alarm to 7:30am", chip: "Pomerium", icon: Clock, done: done },
-    { label: "Add 20min walk at 7:30am", chip: "Pomerium", icon: Activity, done: done },
-    { label: "Block screens after 10:30pm", chip: "Pomerium", icon: Shield, done: done },
-    { label: "Eat ≥134g protein today", chip: "–", icon: Target, done: false },
-    { label: "Last drink before 7pm", chip: "–", icon: Moon, done: false },
+  const backendActions = backendState?.suggestedActions || [];
+  const items = backendActions.length > 0 ? backendActions.map((action) => ({
+    label: actionLabel(action),
+    chip: action.securedBy || "Pomerium",
+    icon: Zap,
+    done: action.status === "executed" || action.status === "simulated_success",
+    description: action.description,
+  })) : [
+    { label: "Cancel 7am HIIT workout", chip: "Pomerium", icon: X, done: done, description: undefined },
+    { label: "Move alarm to 7:30am", chip: "Pomerium", icon: Clock, done: done, description: undefined },
+    { label: "Add 20min walk at 7:30am", chip: "Pomerium", icon: Activity, done: done, description: undefined },
+    { label: "Block screens after 10:30pm", chip: "Pomerium", icon: Shield, done: done, description: undefined },
+    { label: "Eat ≥134g protein today", chip: "–", icon: Target, done: false, description: undefined },
+    { label: "Last drink before 7pm", chip: "–", icon: Moon, done: false, description: undefined },
   ];
 
   return (
@@ -828,7 +835,7 @@ function ActionsPage({ stage }: any) {
 
       <div className="bg-white rounded-lg border border-[#ececec] p-6">
         <div className="space-y-2">
-          {items.map(({ label, chip, icon: Icon, done: d }) => (
+          {items.map(({ label, chip, icon: Icon, done: d, description }) => (
             <div key={label} className={`flex items-center gap-3 p-4 rounded-lg border transition-all ${
               d ? "bg-[#f0f9f4] border-green-200" : "bg-[#fafafb] border-[#ececec]"
             }`}>
@@ -837,9 +844,12 @@ function ActionsPage({ stage }: any) {
               }`}>
                 {d ? <CheckCircle size={12} className="text-white" /> : <Icon size={12} className="text-[#a3a6af]" />}
               </div>
-              <span className={`font-[14px] flex-1 transition-all ${
-                d ? "text-[#777b86] line-through" : "text-[#17191c]"
-              }`}>{label}</span>
+              <div className="flex-1 min-w-0">
+                <span className={`text-[14px] transition-all ${
+                  d ? "text-[#777b86] line-through" : "text-[#17191c]"
+                }`}>{label}</span>
+                {description && <p className="text-[12px] text-[#979799] mt-0.5">{description}</p>}
+              </div>
               {chip !== "–" && <span className="text-[11px] bg-[#e8e5f2] text-[#6b62f2] px-2 py-1 rounded-full font-medium">{chip}</span>}
             </div>
           ))}
@@ -849,26 +859,35 @@ function ActionsPage({ stage }: any) {
   );
 }
 
-function MetricsPage({ stage }: any) {
+function MetricsPage({ stage, backendState }: { stage: Stage; backendState: AdaptiveHealthState | null }) {
+  const cycle = latestCycle(backendState);
+  const realMetrics = cycle?.observation.metrics;
+  const experiment = backendState?.activeExperiment;
+  const actionsFromBackend = backendState?.suggestedActions || [];
   const goals = [
     { label: 'Lose 20 lbs', progress: 38, current: '7.6 lbs lost' },
-    { label: 'Increase energy', progress: 62, current: 'Score: 6.2/10' },
-    { label: 'Improve sleep', progress: 71, current: 'Avg 7.1h / 78' },
+    { label: 'Increase energy', progress: backendState?.energyScore ?? 62, current: `Score: ${backendState?.energyScore ?? 62}/100` },
+    { label: 'Improve sleep', progress: realMetrics?.sleepQuality ?? 71, current: realMetrics ? `${realMetrics.sleepHours}h / ${realMetrics.sleepQuality}` : 'Avg 7.1h / 78' },
   ];
 
   const good = stage === "observe" || stage === "learn";
-  const healthScore = good ? 71 : 23;
+  const healthScore = backendState?.energyScore ?? (good ? 71 : 23);
   const metrics = [
-    { label: 'HRV', value: good ? '51ms' : '28ms', ok: good },
-    { label: 'Sleep', value: '7h 12m', ok: true },
-    { label: 'Steps', value: '8,240', ok: true },
-    { label: 'Recovery', value: good ? '71%' : '23%', ok: good },
+    { label: 'Resting HR', value: realMetrics ? `${realMetrics.restingHeartRate} bpm` : (good ? '62 bpm' : '74 bpm'), ok: good || Boolean(realMetrics) },
+    { label: 'Sleep', value: realMetrics ? `${realMetrics.sleepHours}h` : '7h 12m', ok: true },
+    { label: 'Steps', value: realMetrics ? realMetrics.steps.toLocaleString() : '8,240', ok: (realMetrics?.steps ?? 8240) >= 6000 },
+    { label: 'Protein', value: realMetrics ? `${realMetrics.proteinGrams}g` : '112g', ok: (realMetrics?.proteinGrams ?? 112) >= 70 },
   ];
 
   const resolved = stage === "learn" || stage === "observe";
   const done = stage === "act" || stage === "observe" || stage === "learn";
 
-  const actions = [
+  const actions = actionsFromBackend.length > 0 ? actionsFromBackend.map((action) => ({
+    label: actionLabel(action),
+    chip: action.securedBy || "Pomerium",
+    icon: Zap,
+    done: action.status === "executed" || action.status === "simulated_success",
+  })) : [
     { label: 'Cancel 7am HIIT workout', chip: 'Pomerium', icon: X, done: done },
     { label: 'Move alarm to 7:30am', chip: 'Pomerium', icon: Clock, done: done },
     { label: 'Add 20min walk at 7:30am', chip: 'Pomerium', icon: Activity, done: done },
@@ -891,7 +910,7 @@ function MetricsPage({ stage }: any) {
             <Target size={16} className="text-[#6b62f2]" />
             <span className="text-[15px] font-medium text-[#17191c]">Goals</span>
           </div>
-          <span className="text-[13px] text-[#979799]">Day 23 of 90</span>
+        <span className="text-[13px] text-[#979799]">Day {backendState?.currentDay ?? 23} of 90</span>
         </div>
         <div className="space-y-4">
           {goals.map(({ label, progress, current }) => (
@@ -953,19 +972,19 @@ function MetricsPage({ stage }: any) {
         </div>
         {resolved ? (
           <>
-            <p className="text-[15px] font-medium text-[#17191c] mb-2">Sleep consistency improved</p>
-            <p className="text-[14px] text-[#777b86] leading-relaxed mb-3">Bedtime now consistent ±30min. Circadian rhythm stabilizing. HRV ceiling improving.</p>
+            <p className="text-[15px] font-medium text-[#17191c] mb-2">{backendState?.currentBottleneck || "Sleep consistency improved"}</p>
+            <p className="text-[14px] text-[#777b86] leading-relaxed mb-3">{cycle?.evaluation?.lesson || "Bedtime now consistent ±30min. Circadian rhythm stabilizing. HRV ceiling improving."}</p>
           </>
         ) : (
           <>
-            <p className="text-[18px] font-semibold text-[#6b62f2] mb-2">Sleep debt accumulation</p>
-            <p className="text-[14px] text-[#777b86] leading-relaxed mb-3">4h 52m last night. HRV crashed to 28ms. Sympathetic nervous system dominant. All training today deepens the deficit.</p>
+            <p className="text-[18px] font-semibold text-[#6b62f2] mb-2">{backendState?.currentBottleneck || "Sleep debt accumulation"}</p>
+            <p className="text-[14px] text-[#777b86] leading-relaxed mb-3">{cycle?.observation?.summary || "4h 52m last night. HRV crashed to 28ms. Sympathetic nervous system dominant. All training today deepens the deficit."}</p>
           </>
         )}
         <div className={`rounded-lg p-3 border ${resolved ? 'bg-[#f0f9f4] border-green-200' : 'bg-[#fff5f5] border-red-200'}`}>
           <p className="text-[12px] text-[#979799] uppercase tracking-[0.5px] mb-1 font-medium">Agent response</p>
           <p className="text-[13px] text-[#17191c]">
-            {resolved ? '✓ Testing: fixed 10:30pm wind-down trigger' : '⚠️ Immediate: cancel workout, prioritise recovery today'}
+            {experiment ? `Testing: ${titleCase(experiment.intervention)}` : resolved ? '✓ Testing: fixed 10:30pm wind-down trigger' : '⚠️ Immediate: cancel workout, prioritise recovery today'}
           </p>
         </div>
       </div>
@@ -977,22 +996,22 @@ function MetricsPage({ stage }: any) {
           <span className="text-[15px] font-medium text-[#17191c]">Current Experiment</span>
           <div className="ml-auto flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#6b62f2] animate-pulse" />
-            <span className="text-[12px] text-[#777b86] font-medium">Day 2</span>
+            <span className="text-[12px] text-[#777b86] font-medium">Day {backendState?.currentDay ?? 2}</span>
           </div>
         </div>
 
         {/* Hypothesis block */}
         <div className="bg-[#fbe1d1] rounded-lg p-4 mb-4 border border-[#f5ceb3]">
           <p className="text-[12px] text-[#5d2a1a] uppercase tracking-[0.5px] mb-2 font-medium">Hypothesis</p>
-          <p className="text-[17px] font-semibold text-[#5d2a1a] mb-2 leading-snug">Alcohol cutoff at 7pm</p>
-          <p className="text-[13px] text-[#5d2a1a] leading-relaxed opacity-90">Predicts +15% deep sleep, +8% HRV. Based on pattern: 3/4 poor sleep nights correlate with evening drinks after 8pm.</p>
+          <p className="text-[17px] font-semibold text-[#5d2a1a] mb-2 leading-snug">{experiment ? titleCase(experiment.intervention) : "Alcohol cutoff at 7pm"}</p>
+          <p className="text-[13px] text-[#5d2a1a] leading-relaxed opacity-90">{experiment?.hypothesis || "Predicts +15% deep sleep, +8% HRV. Based on pattern: 3/4 poor sleep nights correlate with evening drinks after 8pm."}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Metric', value: 'Deep sleep' },
-            { label: 'Baseline', value: '1h 12m' },
-            { label: 'Target', value: '1h 23m' },
+            { label: 'Metric', value: experiment?.successMetric || 'Deep sleep' },
+            { label: 'Baseline', value: cycle?.evaluation ? String(cycle.evaluation.before) : '1h 12m' },
+            { label: 'Target', value: cycle?.evaluation ? String(cycle.evaluation.after) : '1h 23m' },
           ].map(({ label, value }) => (
             <div key={label} className="bg-[#fafafb] rounded-lg p-3 text-center border border-[#ececec]">
               <p className="text-[11px] text-[#979799] mb-1">{label}</p>
@@ -1089,7 +1108,18 @@ function MetricsPage({ stage }: any) {
   );
 }
 
-function HistoryPage() {
+function HistoryPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
+  const backendExperiments = backendState?.memory?.experiments || [];
+  const experiments = backendExperiments.length > 0 ? backendExperiments.map((experiment, index) => ({
+    id: index + 1,
+    strategy: titleCase(experiment.name),
+    days: 1,
+    result: experiment.result === "success" ? "success" as const : "failed" as const,
+    metric: "Energy",
+    delta: `${experiment.energyDelta >= 0 ? "+" : ""}${experiment.energyDelta}`,
+    lesson: experiment.lesson,
+  })) : EXPERIMENTS.map((experiment) => ({ ...experiment, lesson: undefined }));
+
   return (
     <div className="space-y-6">
       <div>
@@ -1099,7 +1129,7 @@ function HistoryPage() {
 
       <div className="bg-white rounded-lg border border-[#ececec] p-6">
         <div className="space-y-2">
-          {EXPERIMENTS.map(({ id, strategy, days, result, metric, delta }) => (
+          {experiments.map(({ id, strategy, days, result, metric, delta, lesson }) => (
             <div key={id} className="flex items-start gap-3 p-4 bg-[#fafafb] rounded-lg border border-[#ececec]">
               <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 ${
                 result === "success" ? "bg-green-500" :
@@ -1109,6 +1139,7 @@ function HistoryPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-medium text-[#17191c] leading-snug">{strategy}</p>
                 <p className="text-[12px] text-[#979799] mt-1">{days} days • {metric}</p>
+                {lesson && <p className="text-[12px] text-[#777b86] mt-1 leading-relaxed">{lesson}</p>}
               </div>
               <div className="text-right flex-shrink-0">
                 <p className={`font-mono text-[14px] font-semibold ${
@@ -1138,6 +1169,9 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [msgIdx, setMsgIdx] = useState(0);
   const [iteration, setIteration] = useState(1);
+  const [backendState, setBackendState] = useState<AdaptiveHealthState | null>(null);
+  const [backendError, setBackendError] = useState<string | null>(null);
+  const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1149,12 +1183,61 @@ export default function Dashboard() {
     }
   }, []);
 
+  const loadBackendState = useCallback(async () => {
+    try {
+      const state = await getAdaptiveHealthState();
+      setBackendState(state);
+      setIteration(Math.max(1, state.currentDay || 1));
+      setBackendError(null);
+    } catch (error) {
+      setBackendError(error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadBackendState();
+  }, [loadBackendState]);
+
   const stage = STAGES[stageIdx].id;
 
-  const reset = useCallback(() => {
+  const reset = useCallback(async () => {
     setStageIdx(0); setLogs([]); setMsgIdx(0); setIteration(1); setRunning(false);
+    try {
+      const state = await resetAdaptiveHealthDemo();
+      setBackendState(state);
+      setBackendError(null);
+    } catch (error) {
+      setBackendError(error instanceof Error ? error.message : String(error));
+    }
     setTimeout(() => setRunning(true), 120);
   }, []);
+
+  const advanceDay = useCallback(async () => {
+    if (advancing) return;
+    setAdvancing(true);
+    setActiveTab((tab) => tab === "sources" ? "overview" : tab);
+
+    try {
+      const result = await advanceAdaptiveHealthDay();
+      setBackendState(result.state);
+      setBackendError(null);
+      setIteration(Math.max(1, result.state.currentDay));
+      setStageIdx(0);
+      setMsgIdx(0);
+      setLogs(prev => [
+        ...prev.slice(-50),
+        { time: ts(), stage: "collect", message: result.cycle.observation.summary, sponsor: "Nexla" },
+        { time: ts(), stage: "diagnose", message: result.cycle.diagnosis.rootCause, sponsor: "Zero.xyz" },
+        { time: ts(), stage: "plan", message: result.cycle.experiment.hypothesis, sponsor: "Zero.xyz" },
+        { time: ts(), stage: "act", message: `${result.cycle.action.title} ${result.cycle.action.status}`, sponsor: "Pomerium" },
+        { time: ts(), stage: "learn", message: result.cycle.evaluation.lesson, sponsor: "AWS" },
+      ]);
+    } catch (error) {
+      setBackendError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setAdvancing(false);
+    }
+  }, [advancing]);
 
   useEffect(() => {
     if (!running) return;
@@ -1176,7 +1259,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#fafafb]">
-      <DashHeader running={running} onToggle={() => setRunning(r => !r)} onReset={reset} />
+      <DashHeader
+        running={running}
+        onToggle={() => setRunning(r => !r)}
+        onReset={() => { void reset(); }}
+        onAdvance={() => { void advanceDay(); }}
+        advancing={advancing}
+        backendOnline={Boolean(backendState) && !backendError}
+      />
 
       <div className="flex">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -1188,15 +1278,20 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${running ? 'bg-green-500 animate-pulse' : 'bg-[#ececec]'}`} />
                   <span className="text-[14px] text-[#777b86] font-medium">
-                    Loop <span className="font-mono">#{ iteration}</span> • <span className="capitalize text-[#6b62f2] font-semibold">{stage}</span>
+                    Loop <span className="font-mono">#{ backendState?.currentDay || iteration}</span> • <span className="capitalize text-[#6b62f2] font-semibold">{stage}</span>
                   </span>
                 </div>
+                {backendState && (
+                  <span className="hidden md:inline text-[13px] text-[#979799]">
+                    Energy <span className="font-mono text-[#17191c]">{backendState.energyScore}</span> • {formatGoal(backendState.goal)}
+                  </span>
+                )}
               </div>
               <div className="hidden lg:flex items-center gap-4 text-[12px] text-[#979799]">
-                {['Nexla', 'Zero.xyz', 'AWS', 'Pomerium'].map(s => (
-                  <div key={s} className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#6b62f2]"></div>
-                    {s}
+                {(backendState ? Object.values(backendState.integrations) : []).slice(0, 5).map((integration) => (
+                  <div key={integration.sponsor} className="flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${integration.configured ? "bg-green-500" : "bg-[#979799]"}`}></div>
+                    {integration.sponsor}
                   </div>
                 ))}
               </div>
@@ -1204,13 +1299,13 @@ export default function Dashboard() {
           </div>
 
           <div className="p-6 max-w-6xl">
-            {activeTab === 'sources' && <DataSourcesPage />}
-            {activeTab === 'overview' && <LoopOverviewPage stageIdx={stageIdx} logs={logs} iteration={iteration} running={running} />}
+            {activeTab === 'sources' && <DataSourcesPage backendState={backendState} />}
+            {activeTab === 'overview' && <LoopOverviewPage stageIdx={stageIdx} logs={logs} iteration={iteration} running={running} backendState={backendState} backendError={backendError} />}
             {activeTab === 'agents' && <AgentReasoningPage />}
-            {activeTab === 'sponsors' && <DataFlowPage />}
-            {activeTab === 'actions' && <ActionsPage stage={stage} />}
-            {activeTab === 'metrics' && <MetricsPage stage={stage} />}
-            {activeTab === 'history' && <HistoryPage />}
+            {activeTab === 'sponsors' && <DataFlowPage backendState={backendState} />}
+            {activeTab === 'actions' && <ActionsPage stage={stage} backendState={backendState} />}
+            {activeTab === 'metrics' && <MetricsPage stage={stage} backendState={backendState} />}
+            {activeTab === 'history' && <HistoryPage backendState={backendState} />}
           </div>
         </div>
       </div>

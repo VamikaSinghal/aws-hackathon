@@ -116,10 +116,8 @@ export interface AdvanceDayResponse {
   state: AdaptiveHealthState;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_ADAPTIVE_HEALTH_API_URL || "http://127.0.0.1:8787";
-
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(path, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -136,15 +134,15 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function getAdaptiveHealthState() {
-  return requestJson<AdaptiveHealthState>("/api/state");
+  return requestJson<AdaptiveHealthState>("/api/adaptive-health/state");
 }
 
 export function advanceAdaptiveHealthDay() {
-  return requestJson<AdvanceDayResponse>("/api/advance-day", { method: "POST" });
+  return requestJson<AdvanceDayResponse>("/api/adaptive-health/advance-day", { method: "POST" });
 }
 
 export function resetAdaptiveHealthDemo() {
-  return requestJson<AdaptiveHealthState>("/api/reset", { method: "POST" });
+  return requestJson<AdaptiveHealthState>("/api/adaptive-health/reset", { method: "POST" });
 }
 
 export function formatGoal(goal: string) {
@@ -153,4 +151,3 @@ export function formatGoal(goal: string) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
-
