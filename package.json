@@ -1,25 +1,19 @@
 {
-  "name": "lifeos",
+  "name": "adaptive-health",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "description": "Autonomous health optimization agent for the Loop Engineering Hackathon.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "node src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
-    "next": "14.2.5",
-    "react": "^18",
-    "react-dom": "^18",
-    "lucide-react": "^0.383.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "typescript": "^5",
-    "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.0.1",
-    "postcss": "^8"
+    "@aws-sdk/client-dynamodb": "^3.1090.0",
+    "@aws-sdk/lib-dynamodb": "^3.1090.0"
   }
 }

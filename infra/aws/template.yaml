@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Adaptive Health autonomous agent loop on AWS Lambda and EventBridge.
+
+Resources:
+  AdaptiveHealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: src/lambda.handler
+      CodeUri: ../../
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          AWS_DYNAMODB_TABLE: !Ref AdaptiveHealthMemory
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AdaptiveHealthMemory
+      Events:
+        DailyOptimizationLoop:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(1 day)
+            FlexibleTimeWindow:
+              Mode: "OFF"
+
+  AdaptiveHealthMemory:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+
+Outputs:
+  FunctionName:
+    Value: !Ref AdaptiveHealthFunction
+  MemoryTable:
+    Value: !Ref AdaptiveHealthMemory
+
