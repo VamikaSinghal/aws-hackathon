@@ -62,8 +62,11 @@ export function createPomeriumActionClient() {
       };
     },
 
-    async executeIntervention({ experiment }) {
+    async executeIntervention({ experiment, observation }) {
       const action = actionForExperiment(experiment);
+      if (action.actionType === "calendar_event" && observation?.date) {
+        action.scheduledDate = observation.date;
+      }
 
       if (!isConfigured) {
         return {
@@ -131,4 +134,3 @@ function actionForExperiment(experiment) {
     description: "Avoid adding a new intervention while current metrics are improving."
   };
 }
-

@@ -29,6 +29,9 @@ GET  /api/integrations/status
 POST /api/goal
 POST /api/advance-day
 POST /api/reset
+GET  /auth/google
+GET  /api/google-calendar/events?date=YYYY-MM-DD
+POST /api/google-calendar/test-write
 ```
 
 Example:
@@ -136,6 +139,38 @@ POMERIUM_CA_PATH=./infra/pomerium/certs/ca.crt
 ```
 
 `npm run dev` also starts the protected "actions" upstream (`src/services/actions-service.js`) that Pomerium fronts. A request without the right client cert gets a real 403 from Pomerium; with it, the request is verified and forwarded. See `docs/SPONSOR_INTEGRATIONS.md` for the full architecture and how to regenerate certs.
+
+## Google Calendar Setup (LIVE read/write)
+
+Google Calendar can replace the simulated calendar context with your real schedule and can create real calendar events when the agent executes a `calendar_event` action through the Pomerium-protected bridge.
+
+In Google Cloud Console:
+
+1. Enable the Google Calendar API.
+2. Create an OAuth web client.
+3. Add this authorized redirect URI:
+
+```text
+http://127.0.0.1:8787/auth/google/callback
+```
+
+Then set `.env`:
+
+```text
+GOOGLE_CLIENT_ID=<oauth-client-id>
+GOOGLE_CLIENT_SECRET=<oauth-client-secret>
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8787/auth/google/callback
+GOOGLE_CALENDAR_ID=primary
+GOOGLE_CALENDAR_WRITE_ENABLED=false
+```
+
+Restart `npm run dev`, then open:
+
+```text
+http://127.0.0.1:8787/auth/google
+```
+
+After consent succeeds, `GET /api/state` and the dashboard will show `integrations.googleCalendar.mode`. `advance-day` will read real events into `observation.calendar` when connected. Flip `GOOGLE_CALENDAR_WRITE_ENABLED=true` only when you're ready for real writes; then restart the backend and use `POST /api/google-calendar/test-write` or the dashboard's `Advance Day` flow.
 
 ## AWS Setup (LIVE — deployed)
 

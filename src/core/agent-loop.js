@@ -3,9 +3,12 @@ import { getDemoHealthContext } from "./demo-data.js";
 export async function advanceAgentCycle(state, integrations) {
   const dayIndex = state.currentDay;
   const fallbackContext = getDemoHealthContext(dayIndex);
+  const calendarContext = integrations.calendar
+    ? await integrations.calendar.enrichHealthContext(fallbackContext)
+    : fallbackContext;
   const healthContext = await integrations.nexla.getDailyHealthContext({
     dayIndex,
-    fallbackContext,
+    fallbackContext: calendarContext,
     state
   });
 
@@ -16,7 +19,7 @@ export async function advanceAgentCycle(state, integrations) {
     observation,
     diagnosis
   });
-  const action = await integrations.actions.executeIntervention({ state, experiment });
+  const action = await integrations.actions.executeIntervention({ state, experiment, observation });
   const nextContext = getDemoHealthContext(dayIndex + 1);
   const evaluation = await integrations.reasoning.evaluate({
     state,
@@ -75,6 +78,8 @@ function buildObservation(state, healthContext) {
     summary: summarizeSignals(signals),
     source: healthContext.source,
     normalizedBy: healthContext.normalizedBy,
+    calendarSource: healthContext.calendarSource,
+    googleCalendarError: healthContext.googleCalendarError,
     nexlaError: healthContext.nexlaError
   };
 }
@@ -100,6 +105,9 @@ function buildSponsorPath({ healthContext, diagnosis, action }) {
 
   return [
     nexlaLine,
+    healthContext.calendarSource === "google-calendar-live"
+      ? "Google Calendar supplied the live schedule context"
+      : "Google Calendar schedule context used demo fallback",
     zeroLine,
     pomeriumLine,
     "AWS can schedule this loop daily",

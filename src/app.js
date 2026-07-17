@@ -4,10 +4,12 @@ import { readState, writeState } from "./storage/file-store.js";
 import { createNexlaClient } from "./integrations/nexla.js";
 import { createZeroReasoningProvider } from "./integrations/zero.js";
 import { createPomeriumActionClient } from "./integrations/pomerium.js";
+import { createGoogleCalendarClient } from "./integrations/google-calendar.js";
 import { getAwsIntegrationStatus } from "./integrations/aws.js";
 import { getAkashIntegrationStatus } from "./integrations/akash.js";
 
 export function createAdaptiveHealthApp() {
+  const calendar = createGoogleCalendarClient();
   const nexla = createNexlaClient();
   const reasoning = createZeroReasoningProvider();
   const actions = createPomeriumActionClient();
@@ -35,6 +37,7 @@ export function createAdaptiveHealthApp() {
         nexla: nexla.status(),
         zero: reasoning.status(),
         pomerium: actions.status(),
+        googleCalendar: await calendar.status(),
         aws: getAwsIntegrationStatus(),
         akash: getAkashIntegrationStatus()
       };
@@ -42,7 +45,7 @@ export function createAdaptiveHealthApp() {
 
     async advanceDay() {
       const state = await load();
-      const result = await advanceAgentCycle(state, { nexla, reasoning, actions });
+      const result = await advanceAgentCycle(state, { nexla, reasoning, actions, calendar });
       await save(result.state);
       return {
         cycle: result.cycle,
@@ -69,7 +72,31 @@ export function createAdaptiveHealthApp() {
       const state = createInitialState();
       await save(state);
       return this.getState();
+    },
+
+    getGoogleAuthUrl() {
+      return calendar.getAuthUrl();
+    },
+
+    async handleGoogleOAuthCallback(code) {
+      return calendar.handleOAuthCallback(code);
+    },
+
+    async listGoogleCalendarEvents(date) {
+      return {
+        date,
+        events: await calendar.listEventsForDate(date)
+      };
+    },
+
+    async testGoogleCalendarWrite() {
+      const action = {
+        actionType: "calendar_event",
+        title: "Adaptive Health demo check",
+        scheduledFor: "19:00",
+        description: "Safe test event created from the local Adaptive Health backend."
+      };
+      return calendar.createEventFromAction(action);
     }
   };
 }
-

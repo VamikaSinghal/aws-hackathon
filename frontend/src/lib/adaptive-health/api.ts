@@ -1,10 +1,15 @@
-export type SponsorKey = "nexla" | "zero" | "pomerium" | "aws" | "akash";
+export type SponsorKey = "nexla" | "zero" | "pomerium" | "googleCalendar" | "aws" | "akash";
 
 export interface IntegrationStatus {
-  sponsor: string;
+  sponsor?: string;
+  provider?: string;
   role: string;
   mode: string;
   configured: boolean;
+  connected?: boolean;
+  writeEnabled?: boolean;
+  calendarId?: string;
+  redirectUri?: string;
   note?: string;
   nexsetId?: string;
   dynamoTable?: string | null;
@@ -31,6 +36,8 @@ export interface Observation {
   summary: string;
   source?: string;
   normalizedBy?: string;
+  calendarSource?: string;
+  googleCalendarError?: string;
 }
 
 export interface Diagnosis {
@@ -61,6 +68,15 @@ export interface SuggestedAction {
     confirmationId?: string;
     executedAt?: string;
     actionType?: string;
+    googleCalendarWrite?: string;
+    googleCalendarEvent?: {
+      id?: string;
+      title?: string;
+      start?: string;
+      end?: string;
+      htmlLink?: string;
+    };
+    googleCalendarError?: string;
   };
 }
 

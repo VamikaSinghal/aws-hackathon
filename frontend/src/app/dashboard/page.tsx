@@ -408,7 +408,18 @@ function StageProgress({ currentStageIdx }: { currentStageIdx: number }) {
 /* ─── TAB PAGES ──────────────────────────────── */
 function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const integrations = backendState?.integrations;
-  const sourceStatus = integrations?.nexla?.configured ? "Nexla Live" : "Demo Data";
+  const sourceStatusFor = (sourceName: string) => {
+    if (sourceName === "Google Calendar") {
+      if (!integrations?.googleCalendar?.configured) return "Needs OAuth";
+      if (!integrations.googleCalendar.connected) return "Connect";
+      return integrations.googleCalendar.writeEnabled ? "Live Read/Write" : "Live Read";
+    }
+    return integrations?.nexla?.configured ? "Nexla Live" : "Demo Data";
+  };
+  const sourceIsLive = (sourceName: string) => {
+    if (sourceName === "Google Calendar") return Boolean(integrations?.googleCalendar?.connected);
+    return Boolean(integrations?.nexla?.configured);
+  };
 
   return (
     <div className="space-y-6">
@@ -418,7 +429,10 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
       </div>
 
       <div className="grid gap-4">
-        {DATA_SOURCES.map((source) => (
+        {DATA_SOURCES.map((source) => {
+          const live = sourceIsLive(source.name);
+          const status = sourceStatusFor(source.name);
+          return (
           <div key={source.name} className="bg-white rounded-lg border border-[#ececec] p-5 hover:border-[#6b62f2] transition-all">
             <div className="flex items-start gap-4">
               <div className="text-4xl">{source.icon}</div>
@@ -429,12 +443,22 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
                     <p className="text-[12px] text-[#979799]">{source.category}</p>
                   </div>
                   <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium ${
-                    integrations?.nexla?.configured ? "bg-green-50 text-green-700" : "bg-[#f2f2f3] text-[#777b86]"
+                    live ? "bg-green-50 text-green-700" : "bg-[#f2f2f3] text-[#777b86]"
                   }`}>
-                    <div className={`w-2 h-2 rounded-full ${integrations?.nexla?.configured ? "bg-green-500 animate-pulse" : "bg-[#979799]"}`}></div>
-                    {sourceStatus}
+                    <div className={`w-2 h-2 rounded-full ${live ? "bg-green-500 animate-pulse" : "bg-[#979799]"}`}></div>
+                    {status}
                   </div>
                 </div>
+                {source.name === "Google Calendar" && !integrations?.googleCalendar?.connected && (
+                  <a
+                    href="http://127.0.0.1:8787/auth/google"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-[12px] font-medium text-[#6b62f2] hover:text-[#5148d8]"
+                  >
+                    Connect Google Calendar <ArrowRight size={13} />
+                  </a>
+                )}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {source.dataPoints.map(point => (
                     <span key={point} className="px-2 py-1 bg-[#f0eefd] text-[#6b62f2] text-[11px] rounded-full border border-[#e8e5f2]">
@@ -445,7 +469,7 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

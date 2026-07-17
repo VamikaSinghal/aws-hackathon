@@ -29,6 +29,11 @@ function sendJson(response, statusCode, payload) {
   response.end(body);
 }
 
+function redirect(response, location) {
+  response.writeHead(302, { Location: location });
+  response.end();
+}
+
 async function readJson(request) {
   const chunks = [];
   for await (const chunk of request) {
@@ -66,6 +71,35 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/api/integrations/status") {
       sendJson(response, 200, await app.getIntegrationStatus());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/auth/google") {
+      redirect(response, app.getGoogleAuthUrl());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/auth/google/callback") {
+      const status = await app.handleGoogleOAuthCallback(url.searchParams.get("code"));
+      sendJson(response, 200, {
+        ok: true,
+        message: "Google Calendar connected. You can close this tab and return to the dashboard.",
+        googleCalendar: status
+      });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/google-calendar/events") {
+      const date = url.searchParams.get("date") || new Date().toISOString().slice(0, 10);
+      sendJson(response, 200, await app.listGoogleCalendarEvents(date));
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/google-calendar/test-write") {
+      sendJson(response, 200, {
+        ok: true,
+        event: await app.testGoogleCalendarWrite()
+      });
       return;
     }
 
