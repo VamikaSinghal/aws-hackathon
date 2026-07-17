@@ -484,139 +484,17 @@ function StageProgress({ currentStageIdx }: { currentStageIdx: number }) {
 /* ─── TAB PAGES ──────────────────────────────── */
 function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const integrations = backendState?.integrations;
-  const [nexlaData, setNexlaData] = useState<any>(null);
-  const [isLiveMode, setIsLiveMode] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
-
-  // Generate realistic demo data for visualization
-  const generateRealisticDemoData = () => {
-    return {
-      timestamp: new Date().toISOString(),
-      user_id: 'demo_user_001',
-      health_data: {
-        sleep: {
-          duration_hours: parseFloat((7.2 + Math.random() * 1.5).toFixed(1)),
-          quality_score: Math.floor(65 + Math.random() * 30),
-          deep_sleep: parseFloat((1.5 + Math.random() * 1).toFixed(1)),
-          hrv: Math.floor(35 + Math.random() * 30)
-        },
-        activity: {
-          steps: Math.floor(8000 + Math.random() * 3000),
-          distance_km: parseFloat((6 + Math.random() * 4).toFixed(1)),
-          calories: Math.floor(300 + Math.random() * 200)
-        },
-        schedule: {
-          events: [
-            { name: 'Morning Meeting', start: '09:00', duration_min: 60 },
-            { name: 'Team Sync', start: '14:00', duration_min: 30 }
-          ]
-        }
-      }
-    };
+  const sourceStatusFor = (sourceName: string) => {
+    if (sourceName === "Google Calendar") {
+      if (!integrations?.googleCalendar?.configured) return "Needs OAuth";
+      if (!integrations.googleCalendar.connected) return "Connect";
+      return integrations.googleCalendar.writeEnabled ? "Live Read/Write" : "Live Read";
+    }
+    return integrations?.nexla?.configured ? "Nexla Live" : "Demo Data";
   };
-
-  // Fetch live data from Nexla (or generate realistic demo)
-  const syncNexlaData = async () => {
-    try {
-      setSyncing(true);
-
-      // Try to fetch real data first
-      const response = await fetch('/api/nexla/webhook');
-      let data = null;
-
-      if (response.ok) {
-        const result = await response.json();
-        data = result.data;
-      } else {
-        // Generate realistic demo data for visualization
-        data = generateRealisticDemoData();
-      }
-
-      if (data) {
-        setNexlaData(data);
-        setIsLiveMode(true);
-        setLastSyncTime(new Date().toLocaleTimeString());
-      }
-    } catch (error) {
-      console.error('Failed to sync Nexla data:', error);
-      // Generate realistic demo data as fallback for demo purposes
-      const data = generateRealisticDemoData();
-      setNexlaData(data);
-      setIsLiveMode(true);
-      setLastSyncTime(new Date().toLocaleTimeString());
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  useEffect(() => {
-    // Auto-sync every 30 seconds (only if already in live mode)
-    if (isLiveMode) {
-      const interval = setInterval(syncNexlaData, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [isLiveMode]);
-
-  // Map Nexla data to data sources with live values
-  const getSourceWithLiveData = (source: any) => {
-    const liveSource = { ...source, liveValues: [] as any[] };
-
-    if (isLiveMode && nexlaData) {
-      const sleepData = nexlaData.health_data?.sleep || {};
-      const activityData = nexlaData.health_data?.activity || {};
-      const scheduleData = nexlaData.health_data?.schedule || { events: [] };
-
-      // Assign live data based on source
-      if (source.name === 'Apple Health') {
-        liveSource.liveValues = [
-          { label: 'Heart Rate', value: '62 bpm', status: 'normal' },
-          { label: 'Steps', value: `${activityData.steps || 0}`, status: 'tracking' },
-          { label: 'Sleep', value: `${sleepData.duration_hours || 0}h`, status: sleepData.duration_hours > 7 ? 'good' : 'warning' },
-          { label: 'Workouts', value: scheduleData.events?.length ? 'Scheduled' : 'None', status: 'info' }
-        ];
-      } else if (source.name === 'Oura Ring') {
-        liveSource.liveValues = [
-          { label: 'Sleep Score', value: `${sleepData.quality_score || 0}%`, status: sleepData.quality_score > 70 ? 'good' : 'warning' },
-          { label: 'HRV', value: `${sleepData.hrv || 0}ms`, status: sleepData.hrv > 50 ? 'good' : 'warning' },
-          { label: 'Temperature', value: 'Normal', status: 'normal' },
-          { label: 'Movement', value: `${activityData.steps || 0} steps`, status: 'tracking' }
-        ];
-      } else if (source.name === 'Google Calendar') {
-        const events = scheduleData.events || [];
-        liveSource.liveValues = [
-          { label: 'Events', value: `${events.length} today`, status: 'info' },
-          { label: 'Duration', value: events.length > 0 ? `${events[0]?.duration_min || 0}min` : 'No meetings', status: 'info' },
-          { label: 'Attendees', value: 'Multiple', status: 'info' },
-          { label: 'Location', value: events.length > 0 ? 'Scheduled' : 'None', status: 'info' }
-        ];
-      } else if (source.name === 'Whoop') {
-        liveSource.liveValues = [
-          { label: 'Strain', value: 'Moderate', status: 'info' },
-          { label: 'Recovery', value: `${sleepData.quality_score || 0}%`, status: sleepData.quality_score > 70 ? 'good' : 'warning' },
-          { label: 'Training', value: 'Active', status: 'info' },
-          { label: 'HR Data', value: `${sleepData.hrv || 0}ms HRV`, status: 'tracking' }
-        ];
-      } else if (source.name === 'Strava') {
-        liveSource.liveValues = [
-          { label: 'Running', value: activityData.distance_km ? 'Active' : 'None', status: 'info' },
-          { label: 'Cycling', value: 'Tracked', status: 'info' },
-          { label: 'Distance', value: `${activityData.distance_km || 0}km`, status: 'tracking' },
-          { label: 'Elevation', value: 'Recorded', status: 'info' },
-          { label: 'Pace', value: 'Optimal', status: 'info' },
-          { label: 'Power', value: 'Measured', status: 'info' }
-        ];
-      } else if (source.name === 'Gmail') {
-        liveSource.liveValues = [
-          { label: 'Messages', value: '12 unread', status: 'warning' },
-          { label: 'Senders', value: 'Multiple', status: 'info' },
-          { label: 'Priority', value: '3 important', status: 'warning' },
-          { label: 'Time', value: 'Last hour', status: 'info' }
-        ];
-      }
-    }
-
-    return liveSource;
+  const sourceIsLive = (sourceName: string) => {
+    if (sourceName === "Google Calendar") return Boolean(integrations?.googleCalendar?.connected);
+    return Boolean(integrations?.nexla?.configured);
   };
 
   return (
@@ -668,62 +546,41 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
       {/* Data Sources Grid */}
       <div className="grid gap-4">
         {DATA_SOURCES.map((source) => {
-          const sourceWithLive = getSourceWithLiveData(source);
+          const live = sourceIsLive(source.name);
+          const status = sourceStatusFor(source.name);
           return (
-            <div key={source.name} className={`rounded-lg border-2 p-5 transition-all ${
-              isLiveMode
-                ? 'bg-gradient-to-br from-white to-[#f5f3ff] border-[#6b62f2]'
-                : 'bg-white border-[#ececec] hover:border-[#6b62f2]'
-            }`}>
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">{source.icon}</div>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-bold text-[15px] text-[#17191c]">{source.name}</p>
-                      <p className="text-[12px] text-[#777b86]">{source.category}</p>
-                    </div>
-                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
-                      isLiveMode
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-[#f2f2f3] text-[#777b86]'
-                    }`}>
-                      <div className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-green-600 animate-pulse' : 'bg-[#979799]'}`}></div>
-                      {isLiveMode ? '🟢 Live' : 'Demo'}
-                    </div>
+          <div key={source.name} className="bg-white rounded-lg border border-[#ececec] p-5 hover:border-[#6b62f2] transition-all">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">{source.icon}</div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-[#17191c]">{source.name}</p>
+                    <p className="text-[12px] text-[#979799]">{source.category}</p>
                   </div>
-
-                  {/* Live Data Values */}
-                  {isLiveMode && sourceWithLive.liveValues.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                      {sourceWithLive.liveValues.map((val, idx) => (
-                        <div key={idx} className="bg-white rounded-lg p-2.5 border border-[#e8e5f2]">
-                          <p className="text-[10px] text-[#777b86] font-semibold uppercase mb-1">{val.label}</p>
-                          <p className={`text-[13px] font-bold ${
-                            val.status === 'good' ? 'text-green-600' :
-                            val.status === 'warning' ? 'text-orange-600' :
-                            val.status === 'info' ? 'text-[#6b62f2]' :
-                            'text-[#17191c]'
-                          }`}>
-                            {val.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {/* Data Points Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    {source.dataPoints.map(point => (
-                      <span key={point} className={`px-2.5 py-1 text-[11px] font-medium rounded-full border ${
-                        isLiveMode
-                          ? 'bg-[#6b62f2] text-white border-[#6b62f2]'
-                          : 'bg-[#f0eefd] text-[#6b62f2] border-[#e8e5f2]'
-                      }`}>
-                        {point}
-                      </span>
-                    ))}
+                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium ${
+                    live ? "bg-green-50 text-green-700" : "bg-[#f2f2f3] text-[#777b86]"
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${live ? "bg-green-500 animate-pulse" : "bg-[#979799]"}`}></div>
+                    {status}
                   </div>
+                </div>
+                {source.name === "Google Calendar" && !integrations?.googleCalendar?.connected && (
+                  <a
+                    href="http://127.0.0.1:8787/auth/google"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-[12px] font-medium text-[#6b62f2] hover:text-[#5148d8]"
+                  >
+                    Connect Google Calendar <ArrowRight size={13} />
+                  </a>
+                )}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {source.dataPoints.map(point => (
+                    <span key={point} className="px-2 py-1 bg-[#f0eefd] text-[#6b62f2] text-[11px] rounded-full border border-[#e8e5f2]">
+                      {point}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -749,7 +606,7 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
                 : '📊 Click "Sync Now" to load realistic demo health data and see how the system processes real-world health information.'}
             </p>
           </div>
-        </div>
+        )})}
       </div>
     </div>
   );

@@ -50,10 +50,17 @@ The app will be available at `http://localhost:3000`
 
 ### Production Build
 
-Build for production:
-```bash
-npm run build
-npm start
+```text
+GET  /health
+GET  /api/state
+GET  /api/timeline
+GET  /api/integrations/status
+POST /api/goal
+POST /api/advance-day
+POST /api/reset
+GET  /auth/google
+GET  /api/google-calendar/events?date=YYYY-MM-DD
+POST /api/google-calendar/test-write
 ```
 
 ## 📁 Project Structure
@@ -201,7 +208,39 @@ Deploy to AWS using Amplify or EC2
 
 ## 📄 License
 
-This project is part of the Loop Engineering Hackathon 2025
+## Google Calendar Setup (LIVE read/write)
+
+Google Calendar can replace the simulated calendar context with your real schedule and can create real calendar events when the agent executes a `calendar_event` action through the Pomerium-protected bridge.
+
+In Google Cloud Console:
+
+1. Enable the Google Calendar API.
+2. Create an OAuth web client.
+3. Add this authorized redirect URI:
+
+```text
+http://127.0.0.1:8787/auth/google/callback
+```
+
+Then set `.env`:
+
+```text
+GOOGLE_CLIENT_ID=<oauth-client-id>
+GOOGLE_CLIENT_SECRET=<oauth-client-secret>
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8787/auth/google/callback
+GOOGLE_CALENDAR_ID=primary
+GOOGLE_CALENDAR_WRITE_ENABLED=false
+```
+
+Restart `npm run dev`, then open:
+
+```text
+http://127.0.0.1:8787/auth/google
+```
+
+After consent succeeds, `GET /api/state` and the dashboard will show `integrations.googleCalendar.mode`. `advance-day` will read real events into `observation.calendar` when connected. Flip `GOOGLE_CALENDAR_WRITE_ENABLED=true` only when you're ready for real writes; then restart the backend and use `POST /api/google-calendar/test-write` or the dashboard's `Advance Day` flow.
+
+## AWS Setup (LIVE — deployed)
 
 ## 🏆 Built By
 
