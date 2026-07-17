@@ -2,8 +2,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
-  Activity, Brain, Zap, Moon, Shield, Database, Cloud, Lock,
-  ArrowRight, ChevronDown, RefreshCw, Target, TrendingUp, Eye, Layers, Server
+  Activity, Brain, Zap, Moon, Database, Cloud, Lock,
+  ArrowRight, ChevronDown, RefreshCw, Target, Eye, Layers, Server
 } from "lucide-react";
 
 function Nav() {
@@ -25,51 +25,41 @@ function Nav() {
 }
 
 function Hero() {
-  const phrases = ["Cancelled your workout.", "Moved your alarm.", "Blocked your screen.", "Adjusted your dinner.", "Updated your plan."];
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const i = setInterval(() => setTick(t => t + 1), 2000);
-    return () => clearInterval(i);
-  }, []);
-
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-12 overflow-hidden">
-      <div className="hero" style={{ margin: "0 -24px", marginBottom: "-80px", paddingBottom: "140px" }}>
-        <div className="container text-center">
-          <div className="inline-flex items-center gap-3 mb-8">
-            <span style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px" }}>
-              Autonomous Health Agent
-            </span>
-          </div>
+    <section style={{ background: "var(--gradient-hero)", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px" }}>
+      <div style={{ textAlign: "center", maxWidth: "900px" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", marginBottom: "32px" }}>
+          <span style={{ color: "var(--color-snow-white)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            Autonomous Health Agent
+          </span>
+        </div>
 
-          <h1 style={{ marginBottom: "24px", maxWidth: "900px", margin: "0 auto 24px" }}>
-            Your health.<br />On autopilot.
-          </h1>
+        <h1 style={{ color: "var(--color-snow-white)", marginBottom: "24px", fontSize: "clamp(48px, 8vw, 72px)", lineHeight: 1, letterSpacing: "-2.52px" }}>
+          Your health. On autopilot.
+        </h1>
 
-          <p style={{ color: "var(--color-bone)", maxWidth: "600px", margin: "0 auto 40px", fontSize: "18px", lineHeight: 1.5 }}>
-            LifeOS doesn't recommend. It acts. Every morning you wake up to a schedule already optimized for what your body actually did last night.
-          </p>
+        <p style={{ color: "var(--color-bone)", maxWidth: "640px", margin: "0 auto 48px", fontSize: "18px", lineHeight: 1.5 }}>
+          LifeOS doesn't recommend. It acts. Every morning you wake up to a schedule already optimized for what your body actually did last night.
+        </p>
 
-          <div className="flex items-center justify-center gap-3 mb-16 flex-wrap">
-            <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              Launch LifeOS <ArrowRight size={16} />
-            </Link>
-            <a href="#problem" className="btn-ghost">See how it works</a>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "80px", flexWrap: "wrap" }}>
+          <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            Launch LifeOS <ArrowRight size={16} />
+          </Link>
+          <a href="#problem" className="btn-ghost">See how it works</a>
+        </div>
 
-          <div style={{ minHeight: "120px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="160" height="160" viewBox="0 0 160 160" fill="none" style={{ opacity: 0.7 }}>
-              <circle cx="80" cy="80" r="75" fill="none" stroke="var(--color-dusk-violet)" strokeWidth="1.5" strokeOpacity="0.3" />
-              <circle cx="80" cy="80" r="50" fill="none" stroke="var(--color-dusk-violet)" strokeWidth="1" strokeOpacity="0.2" />
-              <circle cx="80" cy="80" r="25" fill="var(--color-dusk-violet)" opacity="0.1" />
-              <circle cx="80" cy="80" r="2" fill="var(--color-dusk-violet)" />
-            </svg>
-          </div>
+        <div style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" style={{ opacity: 0.6 }}>
+            <circle cx="80" cy="80" r="75" fill="none" stroke="var(--color-snow-white)" strokeWidth="1.5" strokeOpacity="0.2" />
+            <circle cx="80" cy="80" r="50" fill="none" stroke="var(--color-snow-white)" strokeWidth="1" strokeOpacity="0.15" />
+            <circle cx="80" cy="80" r="2" fill="var(--color-snow-white)" />
+          </svg>
         </div>
       </div>
 
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 animate-bounce" style={{ color: "var(--color-slate)" }}>
-        <ChevronDown size={20} />
+      <div style={{ position: "absolute", bottom: "40px", left: "50%", transform: "translateX(-50%)", animation: "bounce 2s infinite", color: "var(--color-snow-white)" }}>
+        <ChevronDown size={24} />
       </div>
     </section>
   );
@@ -85,33 +75,31 @@ function Problem() {
   ];
 
   return (
-    <section id="problem" className="section">
+    <section id="problem" style={{ padding: "80px 24px", background: "var(--color-void-canvas)" }}>
       <div className="container">
-        <div className="text-center mb-16">
+        <div style={{ textAlign: "center", marginBottom: "64px" }}>
           <span style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", display: "block", marginBottom: "12px" }}>
             The Problem
           </span>
-          <h2>Every health app tells you.<br />None of them act.</h2>
-          <p style={{ color: "var(--color-ash)", maxWidth: "600px", margin: "16px auto 0" }}>
+          <h2 style={{ fontSize: "48px", marginBottom: "16px" }}>Every health app tells you.<br />None of them act.</h2>
+          <p style={{ color: "var(--color-ash)", maxWidth: "640px", margin: "0 auto" }}>
             You're carrying 5 apps, 3 wearables, and a wellness routine that collapses the moment life happens. The problem isn't the data. It's that nothing does anything with it.
           </p>
         </div>
 
-        <div className="grid grid-2" style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))", gap: "32px", maxWidth: "1200px", margin: "0 auto" }}>
           <div>
             <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "24px" }}>
               What every app does
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {apps.map((app) => (
-                <div key={app.name} className="card" style={{ padding: "16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <span style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500 }}>{app.name}</span>
-                      <span style={{ color: "var(--color-slate)", fontSize: "14px", marginLeft: "8px" }}>→ {app.action}</span>
-                    </div>
-                    <Eye size={14} style={{ color: "var(--color-slate)" }} />
+                <div key={app.name} className="card" style={{ padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <span style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500 }}>{app.name}</span>
+                    <span style={{ color: "var(--color-slate)", fontSize: "14px", marginLeft: "8px" }}>→ {app.action}</span>
                   </div>
+                  <Eye size={14} style={{ color: "var(--color-slate)" }} />
                 </div>
               ))}
             </div>
@@ -121,7 +109,7 @@ function Problem() {
             <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "24px" }}>
               What a human expert would do
             </p>
-            <div className="panel-frosted" style={{ fontFamily: "var(--font-dm-sans)", fontSize: "13px", lineHeight: 1.6 }}>
+            <div className="panel-frosted" style={{ fontFamily: "var(--font-dm-sans)", fontSize: "13px", lineHeight: 1.6, padding: "24px" }}>
               <p style={{ color: "var(--color-slate)", margin: 0, marginBottom: "8px" }}>// last night</p>
               <p style={{ color: "var(--color-dusk-violet)", margin: 0 }}>sleep = <span style={{ color: "var(--color-bone)" }}>"4h 52m"</span></p>
               <p style={{ color: "var(--color-dusk-violet)", margin: 0 }}>hrv = <span style={{ color: "var(--color-bone)" }}>28</span>  <span style={{ color: "var(--color-slate)" }}>// avg: 54</span></p>
@@ -146,19 +134,19 @@ function Solution() {
   ];
 
   return (
-    <section id="solution" className="section" style={{ background: "var(--color-graphite)" }}>
+    <section id="solution" style={{ padding: "80px 24px", background: "var(--color-graphite)" }}>
       <div className="container">
-        <div className="text-center mb-16">
+        <div style={{ textAlign: "center", marginBottom: "64px" }}>
           <span style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", display: "block", marginBottom: "12px" }}>
             The Solution
           </span>
-          <h2>It doesn't recommend.<br /><span style={{ color: "var(--color-dusk-violet)" }}>It acts.</span></h2>
-          <p style={{ color: "var(--color-ash)", maxWidth: "600px", margin: "16px auto 0" }}>
+          <h2 style={{ fontSize: "48px", marginBottom: "16px" }}>It doesn't recommend.<br /><span style={{ color: "var(--color-dusk-violet)" }}>It acts.</span></h2>
+          <p style={{ color: "var(--color-ash)", maxWidth: "640px", margin: "0 auto" }}>
             LifeOS runs a continuous agent loop while you sleep. By morning, your day is already rebuilt around what your body needs.
           </p>
         </div>
 
-        <div className="grid grid-2" style={{ maxWidth: "1000px", margin: "0 auto", gap: "32px", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))", gap: "32px", maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {actions.map(({ icon: Icon, label, action }, i) => (
               <div key={i} className="card" style={{ padding: "16px" }}>
@@ -176,8 +164,8 @@ function Solution() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div className="card-dark" style={{ padding: "20px" }}>
-              <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 12px 0" }}>
+            <div className="card-dark" style={{ padding: "24px" }}>
+              <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 16px 0" }}>
                 This morning's summary
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -187,7 +175,7 @@ function Solution() {
                   { label: "Actions taken", values: "7 of 7" },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                       <span style={{ color: "var(--color-ash)", fontSize: "13px" }}>{item.label}</span>
                       <span style={{ color: "var(--color-bone)", fontSize: "13px", fontWeight: 500 }}>{item.values}</span>
                     </div>
@@ -199,7 +187,7 @@ function Solution() {
               </div>
             </div>
 
-            <Link href="/demo" className="btn-ghost" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%" }}>
+            <Link href="/demo" className="btn-ghost" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", textDecoration: "none", color: "inherit" }}>
               Explore live demo <ArrowRight size={14} />
             </Link>
           </div>
@@ -226,19 +214,19 @@ function Loop() {
   }, []);
 
   return (
-    <section id="loop" className="section">
+    <section id="loop" style={{ padding: "80px 24px", background: "var(--color-void-canvas)" }}>
       <div className="container">
-        <div className="text-center mb-16">
+        <div style={{ textAlign: "center", marginBottom: "64px" }}>
           <span style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", display: "block", marginBottom: "12px" }}>
             The Loop
           </span>
-          <h2>Six steps.<br />Runs every night.</h2>
-          <p style={{ color: "var(--color-ash)", maxWidth: "600px", margin: "16px auto 0" }}>
+          <h2 style={{ fontSize: "48px", marginBottom: "16px" }}>Six steps.<br />Runs every night.</h2>
+          <p style={{ color: "var(--color-ash)", maxWidth: "640px", margin: "0 auto" }}>
             The agent loop never stops. While you sleep, it's already rewriting tomorrow.
           </p>
         </div>
 
-        <div className="grid grid-2" style={{ maxWidth: "1000px", margin: "0 auto", gap: "40px", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))", gap: "32px", maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {steps.map(({ icon: Icon, label, desc }, i) => (
               <button
@@ -250,6 +238,9 @@ function Loop() {
                   textAlign: "left",
                   background: activeStep === i ? "rgba(212,212,212,0.08)" : "rgba(212,212,212,0.05)",
                   cursor: "pointer",
+                  border: "none",
+                  fontFamily: "inherit",
+                  transition: "all 200ms ease",
                 }}
               >
                 <div style={{ display: "flex", gap: "12px" }}>
@@ -304,25 +295,25 @@ function Sponsors() {
   ];
 
   return (
-    <section className="section" style={{ background: "var(--color-graphite)" }}>
+    <section style={{ padding: "80px 24px", background: "var(--color-graphite)" }}>
       <div className="container">
-        <div className="text-center mb-16">
+        <div style={{ textAlign: "center", marginBottom: "64px" }}>
           <span style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", display: "block", marginBottom: "12px" }}>
             Sponsors
           </span>
-          <h2>Five structural layers.<br />Not bolted on.</h2>
-          <p style={{ color: "var(--color-ash)", maxWidth: "600px", margin: "16px auto 0" }}>
+          <h2 style={{ fontSize: "48px", marginBottom: "16px" }}>Five structural layers.<br />Not bolted on.</h2>
+          <p style={{ color: "var(--color-ash)", maxWidth: "640px", margin: "0 auto" }}>
             Each sponsor solves a real architectural problem that would otherwise require months to build.
           </p>
         </div>
 
-        <div className="grid grid-3" style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px", maxWidth: "1200px", margin: "0 auto" }}>
           {sponsors.map(({ name, role, icon: Icon }) => (
             <div key={name} className="card" style={{ padding: "24px", textAlign: "center" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
-                <Icon size={24} style={{ color: "var(--color-dusk-violet)" }} />
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+                <Icon size={28} style={{ color: "var(--color-dusk-violet)" }} />
               </div>
-              <p style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: 0, marginBottom: "4px" }}>{name}</p>
+              <p style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: "0 0 4px 0" }}>{name}</p>
               <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>{role}</p>
             </div>
           ))}
@@ -334,11 +325,11 @@ function Sponsors() {
 
 function CTA() {
   return (
-    <section className="section">
+    <section style={{ padding: "80px 24px", background: "var(--color-void-canvas)" }}>
       <div className="container">
         <div style={{ textAlign: "center" }}>
           <h2 style={{ marginBottom: "12px" }}>Wake up to a better day.<br /><span style={{ color: "var(--color-dusk-violet)" }}>Every day.</span></h2>
-          <p style={{ color: "var(--color-ash)", maxWidth: "600px", margin: "0 auto 32px" }}>
+          <p style={{ color: "var(--color-ash)", maxWidth: "640px", margin: "0 auto 32px" }}>
             See your agent operating in real time. Watch it reason, act, and learn.
           </p>
           <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
