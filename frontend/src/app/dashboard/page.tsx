@@ -484,6 +484,18 @@ function StageProgress({ currentStageIdx }: { currentStageIdx: number }) {
 /* ─── TAB PAGES ──────────────────────────────── */
 function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const integrations = backendState?.integrations;
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const isLiveMode = Boolean(integrations?.nexla?.configured);
+  const syncNexlaData = async () => {
+    setSyncing(true);
+    try {
+      await fetch("/api/adaptive-health/state", { cache: "no-store" });
+      setLastSyncTime(new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }));
+    } finally {
+      setSyncing(false);
+    }
+  };
   const sourceStatusFor = (sourceName: string) => {
     if (sourceName === "Google Calendar") {
       if (!integrations?.googleCalendar?.configured) return "Needs OAuth";
@@ -584,6 +596,7 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
                 </div>
               </div>
             </div>
+          </div>
           );
         })}
       </div>
@@ -606,7 +619,7 @@ function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState |
                 : '📊 Click "Sync Now" to load realistic demo health data and see how the system processes real-world health information.'}
             </p>
           </div>
-        )})}
+        </div>
       </div>
     </div>
   );
@@ -1381,12 +1394,13 @@ function DataFlowPage({ backendState }: { backendState: AdaptiveHealthState | nu
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {sponsorRows.map(([key, integration]) => {
             const status = sponsorHealth(integration.mode, integration.configured);
-            const sponsorStage = flowStages.find(s => s.sponsor.includes(integration.sponsor));
+            const sponsorName = integration.sponsor || integration.provider || titleCase(key);
+            const sponsorStage = flowStages.find(s => s.sponsor.includes(sponsorName));
             return (
               <div key={key} className="p-4 bg-[#fafafb] rounded-lg border border-[#ececec]">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <p className="text-[14px] font-semibold text-[#17191c]">{integration.sponsor}</p>
+                    <p className="text-[14px] font-semibold text-[#17191c]">{sponsorName}</p>
                     <p className="text-[12px] text-[#777b86]">{integration.role}</p>
                     {sponsorStage && <p className="text-[11px] text-[#6b62f2] mt-1">📍 Stage: {sponsorStage.name}</p>}
                   </div>
