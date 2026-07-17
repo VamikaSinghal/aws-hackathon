@@ -1,6 +1,6 @@
 # LifeOS — Your Autonomous Health Agent
 
-An AI-powered autonomous health agent that doesn't just recommend—it acts. LifeOS continuously monitors your biometric data, analyzes your health patterns, and automatically optimizes your daily schedule for peak performance.
+An AI-powered autonomous health agent that doesn't just recommend—it acts. LifeOS continuously monitors your data, analyzes your health patterns, and automatically optimizes your daily schedule for peak performance.
 
 ## 🎯 Overview
 
