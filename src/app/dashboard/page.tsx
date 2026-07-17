@@ -12,7 +12,7 @@ import {
 
 /* ─── TYPES ──────────────────────────────────── */
 type Stage = "collect"|"diagnose"|"plan"|"act"|"observe"|"learn";
-type TabType = 'sources' | 'overview' | 'agents' | 'sponsors' | 'actions' | 'metrics' | 'history';
+type TabType = 'sources' | 'overview' | 'agents' | 'sponsors' | 'actions' | 'metrics' | 'diet' | 'history';
 interface LogEntry { time: string; stage: Stage; message: string; sponsor: string; }
 interface DataPoint { id: string; value: number; timestamp: Date; status: 'good' | 'warning' | 'critical'; }
 interface Experiment { id:number; strategy:string; days:number; result:"success"|"failed"|"running"; metric:string; delta:string; }
@@ -115,6 +115,7 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: TabType; onTabChange: 
     { id: 'sponsors', label: 'Data Flow', icon: Workflow, desc: 'System architecture' },
     { id: 'actions', label: 'Actions', icon: Zap, desc: 'Proposed to executed' },
     { id: 'metrics', label: 'Metrics', icon: TrendingUp, desc: 'Real-time analytics' },
+    { id: 'diet', label: 'Diet Suggestions', icon: Droplet, desc: 'Nutrition recommendations' },
     { id: 'history', label: 'History', icon: CheckCircle, desc: 'Past experiments' },
   ];
 
@@ -164,90 +165,238 @@ function StatCard({ icon: Icon, label, value, unit, trend, trendDir }: any) {
   );
 }
 
-/* ─── FLOW DIAGRAM ──────────────────────────– */
+/* ─── PROFESSIONAL DATA FLOW DIAGRAM ──────────────── */
 function DataFlowDiagram() {
   const [animate, setAnimate] = useState(0);
+  const [activeStage, setActiveStage] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => setAnimate(a => (a + 1) % 100), 50);
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const stageTimer = setInterval(() => {
+      setActiveStage(s => (s + 1) % 4);
+    }, 4000);
+    return () => clearInterval(stageTimer);
+  }, []);
+
+  const stages = [
+    {
+      id: 'ingest',
+      name: 'Ingest',
+      description: 'Collect from 6 sources',
+      icon: '📥',
+      color: '#3B82F6',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-300',
+      dataPoints: ['Apple Health', 'Oura Ring', 'Strava', 'Google Calendar', 'Whoop', 'Gmail'],
+      volume: '15 metrics/min'
+    },
+    {
+      id: 'normalize',
+      name: 'Unify',
+      description: 'Normalize & combine',
+      icon: '🔗',
+      color: '#8B5CF6',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-300',
+      dataPoints: ['Schema mapping', 'Data validation', 'Deduplication', 'Timestamp alignment'],
+      volume: '1 unified dataset'
+    },
+    {
+      id: 'analyze',
+      name: 'Analyze',
+      description: 'Multi-agent reasoning',
+      icon: '🧠',
+      color: '#F97316',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-300',
+      dataPoints: ['Pattern detection', 'Trend analysis', 'Anomaly detection', 'Decision making'],
+      volume: '4 agents active'
+    },
+    {
+      id: 'execute',
+      name: 'Execute',
+      description: 'Authorize & apply',
+      icon: '⚡',
+      color: '#10B981',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-300',
+      dataPoints: ['Calendar updates', 'Notifications', 'Device control', 'Logging'],
+      volume: '4 actions/cycle'
+    }
+  ];
+
   return (
-    <div className="bg-white rounded-lg border border-[#ececec] p-6">
-      <h3 className="text-[15px] font-medium text-[#17191c] mb-6">Data Flow Pipeline</h3>
-      <div className="space-y-4">
-        {/* Row 1: Data Sources */}
-        <div className="flex items-center gap-3 justify-between mb-8">
-          <div className="flex gap-2 flex-wrap">
-            {['🏥', '⭕', '📅', '📊', '🚴', '📧'].map((icon, i) => (
-              <div key={i} className="w-12 h-12 rounded-lg bg-[#f0eefd] flex items-center justify-center text-lg border border-[#e8e5f2]">
-                {icon}
+    <div className="space-y-8">
+      {/* Title */}
+      <div>
+        <h3 className="text-[20px] font-semibold text-[#17191c] mb-1">Data Flow Architecture</h3>
+        <p className="text-[14px] text-[#777b86]">Real-time autonomous health data processing pipeline</p>
+      </div>
+
+      {/* Main Flow Diagram */}
+      <div className="bg-gradient-to-br from-white to-[#f9f8ff] rounded-2xl border-2 border-[#e8e5f2] p-8 shadow-sm">
+        {/* Data Sources Row */}
+        <div className="mb-12">
+          <p className="text-[12px] font-semibold text-[#6b62f2] uppercase tracking-wide mb-4">Stage 1: Data Sources</p>
+          <div className="flex gap-3 flex-wrap">
+            {['🏥 Apple Health', '⭕ Oura Ring', '📅 Calendar', '📊 Whoop', '🚴 Strava', '📧 Gmail'].map((source, i) => (
+              <div key={i} className={`px-4 py-2 rounded-lg border-2 font-medium text-[12px] transition-all ${
+                activeStage === 0
+                  ? 'bg-blue-100 border-blue-300 text-blue-700 scale-105'
+                  : 'bg-blue-50 border-blue-200 text-blue-600'
+              }`}>
+                {source}
               </div>
             ))}
           </div>
-          <div className="text-[12px] text-[#979799] font-medium">Health Data Sources</div>
         </div>
 
-        {/* Arrow 1 */}
-        <div className="relative h-12 flex items-center justify-center">
-          <div className="w-full h-1 bg-gradient-to-r from-[#6b62f2] to-[#f0eefd]"></div>
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <div className="w-6 h-6 rounded-full bg-[#6b62f2] flex items-center justify-center">
-              <ArrowRight size={14} className="text-white" style={{
-                transform: `translateX(${animate * 0.5 - 25}%)`
-              }} />
+        {/* Flow Between Stages */}
+        {[0, 1, 2].map((stageIdx) => (
+          <div key={stageIdx}>
+            {/* Animated Arrow */}
+            <div className="relative h-16 flex items-center justify-center mb-12">
+              {/* Background Line */}
+              <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+                <defs>
+                  <linearGradient id={`gradient-${stageIdx}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={stages[stageIdx].color} stopOpacity="0.3" />
+                    <stop offset="50%" stopColor={stages[stageIdx].color} stopOpacity="1" />
+                    <stop offset="100%" stopColor={stages[stageIdx + 1].color} stopOpacity="0.3" />
+                  </linearGradient>
+                </defs>
+                <line x1="5%" y1="50%" x2="95%" y2="50%" stroke={`url(#gradient-${stageIdx})`} strokeWidth="3" />
+                {/* Arrow head */}
+                <polygon points="95,50 85,45 85,55" fill={stages[stageIdx + 1].color} />
+              </svg>
+
+              {/* Moving dot */}
+              <div
+                className="absolute w-4 h-4 rounded-full bg-white border-2 shadow-lg"
+                style={{
+                  left: `${(animate / 100) * 90 + 5}%`,
+                  borderColor: activeStage === stageIdx ? stages[stageIdx].color : '#e8e5f2',
+                  boxShadow: activeStage === stageIdx ? `0 0 12px ${stages[stageIdx].color}` : 'none',
+                  transition: 'none'
+                }}
+              />
+            </div>
+
+            {/* Stage Card */}
+            <div className={`rounded-xl border-2 p-6 mb-12 transition-all duration-300 ${
+              activeStage === stageIdx + 1
+                ? `${stages[stageIdx + 1].bgColor} ${stages[stageIdx + 1].borderColor} scale-105`
+                : `${stages[stageIdx + 1].bgColor} ${stages[stageIdx + 1].borderColor}`
+            }`}>
+              {/* Stage Header */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="text-4xl">{stages[stageIdx + 1].icon}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[14px] font-bold" style={{ color: stages[stageIdx + 1].color }}>
+                      {stages[stageIdx + 1].name}
+                    </span>
+                    <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${
+                      activeStage === stageIdx + 1
+                        ? 'bg-white text-[#6b62f2]'
+                        : 'bg-white/60 text-[#777b86]'
+                    }`}>
+                      {stages[stageIdx + 1].volume}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-[#777b86]">{stages[stageIdx + 1].description}</p>
+                </div>
+                {activeStage === stageIdx + 1 && (
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/70 border border-white">
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: stages[stageIdx + 1].color }} />
+                    <span className="text-[11px] font-medium text-[#17191c]">Active</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Data Points */}
+              <div className="flex flex-wrap gap-2">
+                {stages[stageIdx + 1].dataPoints.map((point, i) => (
+                  <span key={i} className={`text-[11px] px-3 py-1.5 rounded-lg border font-medium transition-all ${
+                    activeStage === stageIdx + 1
+                      ? 'bg-white border-white/50 text-[#17191c]'
+                      : 'bg-white/40 border-white/30 text-[#777b86]'
+                  }`}>
+                    {point}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Row 2: Processing */}
-        <div className="flex gap-3 justify-center mb-8">
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Cloud size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">Nexla</p>
-            <p className="text-[11px] text-[#777b86]">Unify Data</p>
-          </div>
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Brain size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">Zero.xyz</p>
-            <p className="text-[11px] text-[#777b86]">Analyze</p>
-          </div>
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Cpu size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">AWS</p>
-            <p className="text-[11px] text-[#777b86]">Learn</p>
-          </div>
-        </div>
-
-        {/* Arrow 2 */}
-        <div className="relative h-12 flex items-center justify-center">
-          <div className="w-full h-1 bg-gradient-to-r from-[#f0eefd] to-[#6b62f2]"></div>
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <div className="w-6 h-6 rounded-full bg-[#6b62f2] flex items-center justify-center">
-              <ArrowRight size={14} className="text-white" style={{
-                transform: `translateX(${25 - animate * 0.5}%)`
-              }} />
+      {/* Process Details Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stages.map((stage) => (
+          <div
+            key={stage.id}
+            onClick={() => setActiveStage(stages.indexOf(stage))}
+            className={`rounded-lg border-2 p-4 cursor-pointer transition-all transform ${
+              activeStage === stages.indexOf(stage)
+                ? `${stage.bgColor} ${stage.borderColor} scale-105 shadow-lg`
+                : `${stage.bgColor} ${stage.borderColor} hover:scale-102`
+            }`}
+          >
+            <div className="text-3xl mb-2">{stage.icon}</div>
+            <p className="text-[13px] font-bold text-[#17191c] mb-1">{stage.name}</p>
+            <p className="text-[11px] text-[#777b86]">{stage.description}</p>
+            <div className="mt-3 pt-3 border-t border-white/30">
+              <p className="text-[10px] font-semibold text-[#979799]">{stage.volume}</p>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Row 3: Actions */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-4 bg-[#fff5e6] rounded-lg border border-[#ffe8cc] text-center flex-1">
-            <Lock size={18} className="mx-auto mb-2 text-orange-600" />
-            <p className="text-[12px] font-medium text-orange-600">Pomerium</p>
-            <p className="text-[11px] text-[#777b86]">Authorize</p>
+      {/* Data Volume & Latency Info */}
+      <div className="grid grid-cols-3 gap-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] p-6">
+        <div className="text-center">
+          <p className="text-[24px] font-bold text-[#6b62f2] mb-1">6</p>
+          <p className="text-[12px] text-[#777b86]">Data Sources</p>
+          <p className="text-[11px] text-[#979799] mt-1">Real-time sync</p>
+        </div>
+        <div className="text-center border-l-2 border-r-2 border-[#e8e5f2]">
+          <p className="text-[24px] font-bold text-[#6b62f2] mb-1">&lt;2s</p>
+          <p className="text-[12px] text-[#777b86]">Total Latency</p>
+          <p className="text-[11px] text-[#979799] mt-1">End-to-end</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[24px] font-bold text-[#6b62f2] mb-1">15</p>
+          <p className="text-[12px] text-[#777b86]">Metrics/Cycle</p>
+          <p className="text-[11px] text-[#979799] mt-1">Per loop</p>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="bg-white rounded-lg border border-[#ececec] p-4">
+        <p className="text-[12px] font-semibold text-[#17191c] mb-3">📊 Data Flow Legend</p>
+        <div className="grid grid-cols-2 gap-3 text-[11px]">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+            <span className="text-[#777b86]">Data flows through pipeline stages</span>
           </div>
-          <ArrowRight size={18} className="text-[#6b62f2]" />
-          <div className="p-4 bg-[#e6f9f0] rounded-lg border border-[#b3e5db] text-center flex-1">
-            <CheckCircle size={18} className="mx-auto mb-2 text-green-600" />
-            <p className="text-[12px] font-medium text-green-600">Execute</p>
-            <p className="text-[11px] text-[#777b86]">Apply Changes</p>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full animate-pulse bg-green-400"></div>
+            <span className="text-[#777b86]">Currently active stage</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>➜</span>
+            <span className="text-[#777b86]">Real-time data movement</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>⏱️</span>
+            <span className="text-[#777b86]">Latency under 2 seconds</span>
           </div>
         </div>
-
-        <p className="text-[12px] text-[#979799] text-center mt-4">Real-time data flow with multi-agent coordination</p>
       </div>
     </div>
   );
@@ -419,7 +568,7 @@ function LoopOverviewPage({ stageIdx, logs, iteration, running }: any) {
   );
 }
 
-/* ─── AGENT WORKFLOW VISUALIZATION ──────────────── */
+/* ─── PROFESSIONAL AGENT WORKFLOW VISUALIZATION ──────────────── */
 function AgentWorkflowVisualization() {
   const [activeAgentIdx, setActiveAgentIdx] = useState(0);
   const [messageIdx, setMessageIdx] = useState(0);
@@ -427,56 +576,85 @@ function AgentWorkflowVisualization() {
   const agents = [
     {
       name: 'Data Collector',
+      shortName: 'Collect',
       icon: '📥',
-      color: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      role: 'Health Data Integration',
+      color: '#3B82F6',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-300',
       textColor: 'text-blue-700',
       messages: [
-        '📊 Received: Sleep 7.2h, HRV 28ms, Recovery 23%',
-        '📅 Received: HIIT scheduled at 7am',
-        '🌡️ Received: Weather 72°F, clear skies',
-        '✓ Data collection complete - 15 data points'
+        '✓ Connected to 6 health data sources',
+        '✓ Apple Health: Sleep 7.2h, Heart Rate 62bpm',
+        '✓ Oura Ring: HRV 28ms, Sleep Score 71%',
+        '✓ Strava: 8.2km run, Avg Pace 7:10/km',
+        '✓ Google Calendar: HIIT scheduled 7:00am',
+        '✓ Data validation: 15 metrics collected'
       ]
     },
     {
       name: 'Planner Agent',
+      shortName: 'Plan',
       icon: '📋',
-      color: 'bg-purple-50',
-      borderColor: 'border-purple-200',
+      role: 'Strategic Decision Making',
+      color: '#8B5CF6',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-300',
       textColor: 'text-purple-700',
       messages: [
-        '🧠 Analyzing health status...',
-        '💡 Option 1: Keep HIIT (high intensity)',
-        '💡 Option 2: Light workout (low intensity)',
-        '💡 Option 3: Rest day (recovery focus)',
+        '🔍 Analyzing current health state...',
+        '💪 HRV Status: LOW (28ms < 40ms threshold)',
+        '😴 Sleep Quality: GOOD (71% score)',
+        '🏃 Recovery Status: POOR (23% recovery)',
+        '⚡ Option 1: HIIT Workout (HIGH intensity)',
+        '🚶 Option 2: Light Walk (LOW intensity)',
+        '😴 Option 3: Rest Day (RECOVERY focus)',
         '✓ Generated 3 strategic options'
       ]
     },
     {
       name: 'Critic Agent',
+      shortName: 'Critique',
       icon: '🔍',
-      color: 'bg-orange-50',
-      borderColor: 'border-orange-200',
+      role: 'Quality Assurance & Validation',
+      color: '#F97316',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-300',
       textColor: 'text-orange-700',
       messages: [
-        '⚖️ Evaluating Option 1: HIIT workout...',
-        '❌ REJECT: HRV too low (28ms < 40ms threshold)',
-        '✅ APPROVE: Option 2 - Light 20min walk safe',
-        '✓ Reasoning: Recovery + low strain = optimal'
+        '⚖️ Evaluating Option 1: HIIT Workout',
+        '❌ REJECTED - Rationale:',
+        '  • HRV too low for high-intensity training',
+        '  • Sympathetic nervous system dominant',
+        '  • Risk: Deepens fatigue',
+        '✅ Evaluating Option 2: Light 20min Walk',
+        '✅ APPROVED - Rationale:',
+        '  • Low-intensity activity suitable',
+        '  • Promotes parasympathetic recovery',
+        '  ✓ Consensus reached with Planner'
       ]
     },
     {
       name: 'Optimizer',
+      shortName: 'Optimize',
       icon: '⚡',
-      color: 'bg-green-50',
-      borderColor: 'border-green-200',
+      role: 'Action Generation & Execution Planning',
+      color: '#10B981',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-300',
       textColor: 'text-green-700',
       messages: [
-        '🎯 Building final recommendation...',
-        '+ Add: 20min morning walk at 7:30am',
-        '+ Add: Magnesium supplement 9pm',
-        '+ Block: Screens after 10:30pm',
-        '✓ Consensus reached - 4 actions approved'
+        '🎯 Building comprehensive action plan...',
+        '📅 Action 1: Modify Calendar',
+        '  • Cancel: HIIT Workout (7:00am)',
+        '  • Add: Light Walk (7:30am, 20min)',
+        '🔔 Action 2: Send Notifications',
+        '  • Alert: Walk reminder at 7:15am',
+        '  • Alert: Magnesium supplement at 9pm',
+        '📵 Action 3: Screen Management',
+        '  • Enable: Blue light filter after 9pm',
+        '  • Block: All notifications after 10:30pm',
+        '✓ 4 Actions Approved • Execution Ready'
       ]
     },
   ];
@@ -485,7 +663,7 @@ function AgentWorkflowVisualization() {
     const timer = setInterval(() => {
       setActiveAgentIdx(prev => (prev + 1) % agents.length);
       setMessageIdx(0);
-    }, 8000);
+    }, 12000);
     return () => clearInterval(timer);
   }, [agents.length]);
 
@@ -494,128 +672,188 @@ function AgentWorkflowVisualization() {
     if (messageIdx < currentAgent.messages.length) {
       const timer = setTimeout(() => {
         setMessageIdx(prev => prev + 1);
-      }, 1000);
+      }, 700);
       return () => clearTimeout(timer);
     }
   }, [messageIdx, activeAgentIdx, agents]);
 
   return (
-    <div className="space-y-6">
-      {/* Agent Flow Diagram */}
-      <div className="bg-white rounded-lg border border-[#ececec] p-8">
-        <h3 className="text-[15px] font-medium text-[#17191c] mb-8">Agent Reasoning Workflow</h3>
+    <div className="space-y-8">
+      {/* Title Section */}
+      <div>
+        <h2 className="text-[24px] font-semibold text-[#17191c] mb-2">Multi-Agent Reasoning System</h2>
+        <p className="text-[14px] text-[#777b86]">Real-time autonomous decision making through agent consensus</p>
+      </div>
 
-        {/* Visual Flow */}
-        <div className="grid grid-cols-4 gap-4 mb-12">
-          {agents.map((agent, idx) => (
+      {/* Visual Agent Pipeline */}
+      <div className="bg-gradient-to-br from-white to-[#f9f8ff] rounded-2xl border border-[#e8e5f2] p-8 shadow-sm">
+        {/* Agent Network Diagram */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between relative">
+            {/* Agent Nodes */}
+            {agents.map((agent, idx) => (
+              <div key={idx} className="relative z-10 flex flex-col items-center">
+                <button
+                  onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
+                  className={`
+                    relative w-20 h-20 rounded-full flex flex-col items-center justify-center
+                    transition-all duration-300 cursor-pointer transform
+                    ${activeAgentIdx === idx
+                      ? `scale-110 shadow-xl`
+                      : 'hover:scale-105 shadow-lg'
+                    }
+                  `}
+                  style={{
+                    backgroundColor: activeAgentIdx === idx ? agent.color : '#f5f3ff',
+                    border: `3px solid ${activeAgentIdx === idx ? agent.color : '#e8e5f2'}`,
+                    boxShadow: activeAgentIdx === idx
+                      ? `0 0 20px ${agent.color}40`
+                      : '0 4px 12px rgba(0,0,0,0.08)'
+                  }}
+                >
+                  <div className={`text-3xl ${activeAgentIdx === idx ? 'animate-pulse' : ''}`}>
+                    {agent.icon}
+                  </div>
+                  {activeAgentIdx === idx && (
+                    <div className="absolute inset-0 rounded-full animate-pulse"
+                      style={{ border: `2px solid ${agent.color}`, opacity: 0.3 }} />
+                  )}
+                </button>
+
+                {/* Agent Label */}
+                <p className={`text-[12px] font-semibold mt-3 text-center leading-tight
+                  ${activeAgentIdx === idx ? `text-[#17191c] font-bold` : 'text-[#777b86]'}
+                `}>
+                  {agent.shortName}
+                </p>
+
+                {/* Status Indicator */}
+                <div className={`mt-2 px-2 py-1 rounded-full text-[11px] font-medium
+                  ${activeAgentIdx === idx
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-[#f2f2f3] text-[#979799]'
+                  }
+                `}>
+                  {activeAgentIdx === idx ? '⚙️ Active' : '✓ Ready'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[12px] font-semibold text-[#17191c]">Reasoning Progress</p>
+            <p className="text-[12px] text-[#6b62f2] font-semibold">{activeAgentIdx + 1}/4 Stages</p>
+          </div>
+          <div className="h-2 bg-[#e8e5f2] rounded-full overflow-hidden">
             <div
-              key={idx}
-              onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform ${
-                activeAgentIdx === idx
-                  ? `${agent.borderColor} ${agent.color} ring-2 ring-offset-2 ring-[#6b62f2] scale-105`
-                  : 'border-[#ececec] bg-[#fafafb] hover:border-[#6b62f2]'
-              }`}
-            >
-              <div className="text-3xl mb-2">{agent.icon}</div>
-              <p className={`text-[13px] font-semibold ${activeAgentIdx === idx ? agent.textColor : 'text-[#17191c]'}`}>
-                {agent.name}
-              </p>
-              <div className={`w-full h-1 rounded-full mt-2 ${activeAgentIdx === idx ? agent.color : 'bg-[#ececec]'}`}></div>
+              className="h-full bg-gradient-to-r from-[#6b62f2] to-[#8B5CF6] transition-all duration-500 rounded-full"
+              style={{ width: `${((activeAgentIdx + 1) / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Current Agent Details Panel */}
+        <div className={`rounded-xl p-6 transition-all duration-500 ${agents[activeAgentIdx].bgColor} border-2 ${agents[activeAgentIdx].borderColor}`}>
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg flex items-center justify-center text-4xl"
+                style={{ backgroundColor: agents[activeAgentIdx].color + '20', border: `2px solid ${agents[activeAgentIdx].color}` }}>
+                {agents[activeAgentIdx].icon}
+              </div>
+              <div>
+                <h3 className={`text-[18px] font-bold ${agents[activeAgentIdx].textColor}`}>
+                  {agents[activeAgentIdx].name}
+                </h3>
+                <p className="text-[12px] text-[#777b86] mt-1">{agents[activeAgentIdx].role}</p>
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Animated Arrows Between Agents */}
-        <div className="relative h-2 bg-gradient-to-r from-[#6b62f2] to-[#6b62f2] rounded-full mb-12 overflow-hidden">
-          <div
-            className="absolute h-full bg-white rounded-full animate-pulse"
-            style={{
-              width: '20%',
-              left: `${(activeAgentIdx / (agents.length - 1)) * 80}%`,
-              transition: 'left 0.3s ease'
-            }}
-          ></div>
-        </div>
-
-        {/* Current Agent Details */}
-        <div className={`${agents[activeAgentIdx].color} border-2 ${agents[activeAgentIdx].borderColor} rounded-lg p-6`}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="text-4xl">{agents[activeAgentIdx].icon}</div>
-            <div>
-              <p className={`text-[18px] font-semibold ${agents[activeAgentIdx].textColor}`}>
-                {agents[activeAgentIdx].name}
-              </p>
-              <p className="text-[12px] text-[#777b86]">Processing...</p>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#ececec]">
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: agents[activeAgentIdx].color }} />
+              <span className="text-[12px] font-medium text-[#17191c]">Processing</span>
             </div>
           </div>
 
-          {/* Message Stream */}
-          <div className="space-y-2">
+          {/* Messages Stream */}
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-3">
             {agents[activeAgentIdx].messages.slice(0, messageIdx).map((msg, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 bg-white rounded border-l-2 border-[#6b62f2] animate-slide-in">
-                <span className="text-[14px] leading-relaxed text-[#17191c]">{msg}</span>
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 rounded-lg bg-white/60 backdrop-blur-sm border border-white/80"
+                style={{
+                  animationDelay: `${i * 100}ms`
+                }}
+              >
+                <span className="text-[16px] flex-shrink-0 font-medium">
+                  {msg.includes('✓') ? '✓' : msg.includes('✅') ? '✅' : msg.includes('❌') ? '❌' : msg.includes('•') ? '→' : '•'}
+                </span>
+                <span className="text-[13px] leading-relaxed text-[#17191c] font-medium">
+                  {msg}
+                </span>
               </div>
             ))}
+
             {messageIdx < agents[activeAgentIdx].messages.length && (
-              <div className="flex items-start gap-2 p-2 bg-white rounded border-l-2 border-[#6b62f2] animate-pulse">
-                <span className="text-[14px] font-mono text-[#6b62f2]">█</span>
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/60 animate-pulse">
+                <span className="text-[16px]">→</span>
+                <span className="text-[13px] font-mono text-[#6b62f2]">Processing...</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Agent Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        {agents.map((agent, idx) => (
-          <div
-            key={idx}
-            onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
-            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-              activeAgentIdx === idx
-                ? `${agent.borderColor} ${agent.color}`
-                : 'border-[#ececec] bg-white hover:border-[#6b62f2]'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-3xl">{agent.icon}</div>
-              <div className="flex-1">
-                <p className="text-[14px] font-semibold text-[#17191c]">{agent.name}</p>
-                <p className="text-[12px] text-[#979799] mt-1">
-                  {activeAgentIdx === idx ? (
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-[#6b62f2] animate-pulse"></span>
-                      Active
-                    </span>
-                  ) : (
-                    'Ready'
-                  )}
-                </p>
-              </div>
-            </div>
+      {/* Key Metrics Summary */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: 'Confidence', value: '94%', icon: '📊', color: 'blue' },
+          { label: 'Consensus', value: '4/4', icon: '✅', color: 'green' },
+          { label: 'Analysis Time', value: '2.3s', icon: '⏱️', color: 'purple' },
+          { label: 'Actions Ready', value: '4', icon: '⚡', color: 'orange' },
+        ].map((metric, i) => (
+          <div key={i} className="bg-white rounded-lg border border-[#ececec] p-4 hover:border-[#6b62f2] transition-all">
+            <p className="text-[12px] text-[#979799] mb-2">{metric.label}</p>
+            <p className="text-[24px] font-bold text-[#17191c]">{metric.value}</p>
+            <p className="text-[20px] mt-2">{metric.icon}</p>
           </div>
         ))}
       </div>
 
-      {/* Workflow Summary */}
-      <div className="bg-[#f5f3ff] border border-[#e8e5f2] rounded-lg p-6">
-        <h3 className="text-[15px] font-medium text-[#6b62f2] mb-4">📊 Consensus Summary</h3>
+      {/* Decision Summary */}
+      <div className="bg-gradient-to-r from-[#f5f3ff] to-[#faf9ff] rounded-lg border border-[#e8e5f2] p-6">
+        <h3 className="text-[14px] font-bold text-[#6b62f2] mb-4">🎯 Final Decision Summary</h3>
         <div className="grid grid-cols-2 gap-4">
-          {[
-            { icon: '✅', label: 'Actions Approved', value: '4' },
-            { icon: '⚖️', label: 'Evaluations', value: '3' },
-            { icon: '💡', label: 'Options Generated', value: '3' },
-            { icon: '⏱️', label: 'Processing Time', value: '2.3s' },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="text-2xl">{item.icon}</div>
-              <div>
-                <p className="text-[12px] text-[#777b86]">{item.label}</p>
-                <p className="text-[16px] font-semibold text-[#6b62f2]">{item.value}</p>
-              </div>
+          <div className="flex items-start gap-3">
+            <span className="text-[20px]">📋</span>
+            <div>
+              <p className="text-[12px] text-[#979799]">Recommendation</p>
+              <p className="text-[14px] font-semibold text-[#17191c]">Light 20min Walk at 7:30am</p>
             </div>
-          ))}
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-[20px]">⚡</span>
+            <div>
+              <p className="text-[12px] text-[#979799]">Actions Generated</p>
+              <p className="text-[14px] font-semibold text-[#17191c]">4 Approved • Ready to Execute</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-[20px]">🔒</span>
+            <div>
+              <p className="text-[12px] text-[#979799]">Authorization</p>
+              <p className="text-[14px] font-semibold text-[#17191c]">Pomerium Verified</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-[20px]">📊</span>
+            <div>
+              <p className="text-[12px] text-[#979799]">Expected Outcome</p>
+              <p className="text-[14px] font-semibold text-[#17191c]">+15% HRV Recovery</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -948,6 +1186,207 @@ function MetricsPage({ stage }: any) {
   );
 }
 
+function DietSuggestionPage() {
+  const suggestions = [
+    {
+      meal: 'Breakfast',
+      time: '7:00 AM',
+      recommendation: 'Protein-rich meal with carbs',
+      items: ['Eggs (3)', 'Oatmeal (1 cup)', 'Berries (½ cup)', 'Greek yogurt (½ cup)'],
+      calories: 450,
+      protein: 28,
+      carbs: 45,
+      fats: 12,
+      reason: 'Supports morning energy and muscle recovery after workouts'
+    },
+    {
+      meal: 'Mid-Morning Snack',
+      time: '10:30 AM',
+      recommendation: 'Light snack with hydration',
+      items: ['Banana', 'Almonds (1 oz)', 'Water (16 oz)'],
+      calories: 180,
+      protein: 6,
+      carbs: 22,
+      fats: 9,
+      reason: 'Maintains energy levels and prevents afternoon crashes'
+    },
+    {
+      meal: 'Lunch',
+      time: '12:30 PM',
+      recommendation: 'Balanced macronutrients',
+      items: ['Salmon (150g)', 'Brown rice (1 cup)', 'Broccoli (1.5 cups)', 'Olive oil drizzle'],
+      calories: 650,
+      protein: 42,
+      carbs: 55,
+      fats: 18,
+      reason: 'High omega-3 content supports cognitive function and recovery'
+    },
+    {
+      meal: 'Pre-Workout Snack',
+      time: '4:00 PM',
+      recommendation: 'Quick carbs & hydration',
+      items: ['Apple', 'Honey (1 tbsp)', 'Coconut water (8 oz)'],
+      calories: 140,
+      protein: 0.5,
+      carbs: 35,
+      fats: 0.5,
+      reason: 'Provides energy for evening workout sessions'
+    },
+    {
+      meal: 'Dinner',
+      time: '6:30 PM',
+      recommendation: 'Lean protein with vegetables',
+      items: ['Chicken breast (180g)', 'Sweet potato (medium)', 'Spinach salad (2 cups)', 'Vinaigrette'],
+      calories: 520,
+      protein: 46,
+      carbs: 48,
+      fats: 10,
+      reason: 'Supports muscle repair and stable sleep without heavy digestion'
+    },
+    {
+      meal: 'Evening Recovery',
+      time: '8:00 PM',
+      recommendation: 'Casein protein or dairy',
+      items: ['Cottage cheese (¾ cup)', 'Blueberries (½ cup)'],
+      calories: 160,
+      protein: 20,
+      carbs: 12,
+      fats: 4,
+      reason: 'Slow-digesting protein supports overnight muscle recovery'
+    },
+  ];
+
+  const nutritionTarget = {
+    calories: 2700,
+    protein: 142,
+    carbs: 217,
+    fats: 73,
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-medium text-[#17191c] mb-1">Diet Suggestions</h2>
+        <p className="text-[14px] text-[#777b86]">Personalized nutrition recommendations based on your goals and activity</p>
+      </div>
+
+      {/* Daily Target */}
+      <div className="bg-gradient-to-br from-[#f5f3ff] to-[#faf9ff] rounded-lg border border-[#e8e5f2] p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <Target size={16} className="text-[#6b62f2]" />
+          <span className="text-[15px] font-medium text-[#17191c]">Daily Nutrition Target</span>
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {[
+            { label: 'Calories', value: nutritionTarget.calories, unit: 'kcal', icon: '🔥' },
+            { label: 'Protein', value: nutritionTarget.protein, unit: 'g', icon: '💪' },
+            { label: 'Carbs', value: nutritionTarget.carbs, unit: 'g', icon: '🌾' },
+            { label: 'Fats', value: nutritionTarget.fats, unit: 'g', icon: '🥑' },
+          ].map(({ label, value, unit, icon }) => (
+            <div key={label} className="bg-white rounded-lg p-4 border border-[#ececec] text-center">
+              <p className="text-[28px] mb-1">{icon}</p>
+              <p className="text-[18px] font-semibold text-[#17191c]">{value}</p>
+              <p className="text-[12px] text-[#979799] mt-1">{label} ({unit})</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Meal Plans */}
+      <div className="space-y-4">
+        {suggestions.map(({ meal, time, recommendation, items, calories, protein, carbs, fats, reason }, idx) => (
+          <div key={idx} className="bg-white rounded-lg border border-[#ececec] p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[18px]">🍽️</span>
+                  <span className="text-[16px] font-semibold text-[#17191c]">{meal}</span>
+                  <span className="text-[12px] text-[#777b86] bg-[#f2f2f3] px-2 py-1 rounded">{time}</span>
+                </div>
+                <p className="text-[14px] text-[#777b86] font-medium">{recommendation}</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-[18px] font-semibold text-[#6b62f2]">{calories}</p>
+                <p className="text-[11px] text-[#979799]">kcal</p>
+              </div>
+            </div>
+
+            <div className="bg-[#fafafb] rounded-lg p-4 mb-4 border border-[#ececec]">
+              <p className="text-[12px] text-[#979799] uppercase tracking-[0.5px] mb-2 font-medium">Recommended Items</p>
+              <div className="flex flex-wrap gap-2">
+                {items.map((item, i) => (
+                  <span key={i} className="text-[13px] bg-white text-[#17191c] px-3 py-1.5 rounded-lg border border-[#ececec]">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: 'Protein', value: protein, unit: 'g' },
+                { label: 'Carbs', value: carbs, unit: 'g' },
+                { label: 'Fats', value: fats, unit: 'g' },
+              ].map(({ label, value, unit }) => (
+                <div key={label} className="bg-[#f5f3ff] rounded-lg p-3 border border-[#e8e5f2]">
+                  <p className="text-[11px] text-[#9b92d9] uppercase tracking-[0.5px] font-medium mb-1">{label}</p>
+                  <p className="text-[16px] font-semibold text-[#6b62f2]">{value}g</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-[#e8f5ff] rounded-lg p-3 border border-[#b3d9ff]">
+              <p className="text-[12px] text-[#0066cc] font-medium">💡 Why this meal:</p>
+              <p className="text-[13px] text-[#003399] mt-1">{reason}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hydration Guide */}
+      <div className="bg-white rounded-lg border border-[#ececec] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Droplet size={16} className="text-[#6b62f2]" />
+          <span className="text-[15px] font-medium text-[#17191c]">Hydration Guide</span>
+        </div>
+        <div className="space-y-3">
+          {[
+            { time: 'Morning (7am-9am)', amount: '500ml', note: 'Rehydrate after sleep' },
+            { time: 'Mid-morning (10am)', amount: '300ml', note: 'Before snack' },
+            { time: 'Lunch (12pm-1pm)', amount: '400ml', note: 'With meal' },
+            { time: 'Pre-workout (4pm)', amount: '400ml', note: 'Prepare for exercise' },
+            { time: 'Post-workout (6pm)', amount: '500ml', note: 'Recovery hydration' },
+            { time: 'Evening (7pm-9pm)', amount: '300ml', note: 'Light hydration before bed' },
+          ].map(({ time, amount, note }, idx) => (
+            <div key={idx} className="flex items-center justify-between p-3 bg-[#fafafb] rounded-lg border border-[#ececec]">
+              <div>
+                <p className="text-[13px] font-medium text-[#17191c]">{time}</p>
+                <p className="text-[12px] text-[#979799]">{note}</p>
+              </div>
+              <span className="text-[14px] font-semibold text-[#6b62f2]">{amount}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dietary Notes */}
+      <div className="bg-[#fff5f5] rounded-lg border border-[#ffcccc] p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertCircle size={16} className="text-red-600" />
+          <span className="text-[15px] font-medium text-[#17191c]">Important Notes</span>
+        </div>
+        <ul className="space-y-2 text-[13px] text-[#663333]">
+          <li>✓ Avoid caffeine after 2 PM to maintain sleep quality</li>
+          <li>✓ Eat dinner at least 3 hours before bedtime</li>
+          <li>✓ Space meals 3-4 hours apart for optimal digestion</li>
+          <li>✓ Adjust portions based on workout intensity</li>
+          <li>✓ Stay consistent with meal timing for circadian rhythm</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function HistoryPage() {
   return (
     <div className="space-y-6">
@@ -1069,6 +1508,7 @@ export default function Dashboard() {
             {activeTab === 'sponsors' && <DataFlowPage />}
             {activeTab === 'actions' && <ActionsPage stage={stage} />}
             {activeTab === 'metrics' && <MetricsPage stage={stage} />}
+            {activeTab === 'diet' && <DietSuggestionPage />}
             {activeTab === 'history' && <HistoryPage />}
           </div>
         </div>

@@ -21,7 +21,7 @@ import {
 
 /* ─── TYPES ──────────────────────────────────── */
 type Stage = "collect"|"diagnose"|"plan"|"act"|"observe"|"learn";
-type TabType = 'sources' | 'overview' | 'agents' | 'sponsors' | 'actions' | 'metrics' | 'history';
+type TabType = 'sources' | 'overview' | 'agents' | 'sponsors' | 'actions' | 'metrics' | 'diet' | 'history';
 interface LogEntry { time: string; stage: Stage; message: string; sponsor: string; }
 interface DataPoint { id: string; value: number; timestamp: Date; status: 'good' | 'warning' | 'critical'; }
 interface Experiment { id:number; strategy:string; days:number; result:"success"|"failed"|"running"; metric:string; delta:string; }
@@ -165,6 +165,7 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: TabType; onTabChange: 
     { id: 'sponsors', label: 'Data Flow', icon: Workflow, desc: 'System architecture' },
     { id: 'actions', label: 'Actions', icon: Zap, desc: 'Proposed to executed' },
     { id: 'metrics', label: 'Metrics', icon: TrendingUp, desc: 'Real-time analytics' },
+    { id: 'diet', label: 'Diet Suggestions', icon: Droplet, desc: 'Nutrition recommendations' },
     { id: 'history', label: 'History', icon: CheckCircle, desc: 'Past experiments' },
   ];
 
@@ -223,81 +224,156 @@ function DataFlowDiagram() {
     return () => clearInterval(timer);
   }, []);
 
+  const stages = [
+    { num: '1', title: 'COLLECT', desc: 'Health Data Ingestion', icon: '📊', sponsor: 'Nexla', color: 'from-blue-500 to-blue-600' },
+    { num: '2', title: 'DIAGNOSE', desc: 'Pattern Analysis', icon: '🧠', sponsor: 'Zero.xyz', color: 'from-purple-500 to-purple-600' },
+    { num: '3', title: 'PLAN', desc: 'Strategy Generation', icon: '📝', sponsor: 'Zero.xyz', color: 'from-pink-500 to-pink-600' },
+    { num: '4', title: 'ACT', desc: 'Execute Actions', icon: '⚡', sponsor: 'Pomerium', color: 'from-orange-500 to-orange-600' },
+    { num: '5', title: 'OBSERVE', desc: 'Outcome Tracking', icon: '👁️', sponsor: 'Nexla', color: 'from-cyan-500 to-cyan-600' },
+    { num: '6', title: 'LEARN', desc: 'Model Improvement', icon: '🔄', sponsor: 'AWS', color: 'from-green-500 to-green-600' },
+  ];
+
   return (
-    <div className="bg-white rounded-lg border border-[#ececec] p-6">
-      <h3 className="text-[15px] font-medium text-[#17191c] mb-6">Data Flow Pipeline</h3>
-      <div className="space-y-4">
-        {/* Row 1: Data Sources */}
-        <div className="flex items-center gap-3 justify-between mb-8">
-          <div className="flex gap-2 flex-wrap">
-            {['🏥', '⭕', '📅', '📊', '🚴', '📧'].map((icon, i) => (
-              <div key={i} className="w-12 h-12 rounded-lg bg-[#f0eefd] flex items-center justify-center text-lg border border-[#e8e5f2]">
-                {icon}
+    <div className="space-y-6">
+      {/* Main Flow Diagram */}
+      <div className="bg-gradient-to-br from-[#fafafb] to-white rounded-lg border border-[#ececec] p-8">
+        <div className="mb-2 flex items-center gap-2">
+          <Workflow size={18} className="text-[#6b62f2]" />
+          <h3 className="text-[16px] font-semibold text-[#17191c]">6-Stage Autonomous Loop</h3>
+        </div>
+        <p className="text-[13px] text-[#777b86] mb-8">Continuous cycle runs automatically to optimize your health</p>
+
+        {/* Circular Flow with 6 Stages */}
+        <div className="relative mb-12">
+          <svg viewBox="0 0 800 400" className="w-full h-auto">
+            {/* Background circles */}
+            <circle cx="400" cy="200" r="150" fill="none" stroke="#f2f2f3" strokeWidth="1" strokeDasharray="5,5" opacity="0.5" />
+            <circle cx="400" cy="200" r="180" fill="none" stroke="#f2f2f3" strokeWidth="1" strokeDasharray="5,5" opacity="0.3" />
+
+            {/* Connecting lines and flow indicators */}
+            {stages.map((stage, idx) => {
+              const angle = (idx / stages.length) * Math.PI * 2 - Math.PI / 2;
+              const nextAngle = (((idx + 1) % stages.length) / stages.length) * Math.PI * 2 - Math.PI / 2;
+              const x = 400 + Math.cos(angle) * 150;
+              const y = 200 + Math.sin(angle) * 150;
+              const nextX = 400 + Math.cos(nextAngle) * 150;
+              const nextY = 200 + Math.sin(nextAngle) * 150;
+
+              const progress = (animate / 100) * 100;
+              const shouldAnimate = (progress % (100 / stages.length)) < (progress % (100 / stages.length));
+
+              return (
+                <g key={idx}>
+                  {/* Arrow to next stage */}
+                  <defs>
+                    <marker id={`arrowhead-${idx}`} markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                      <polygon points="0 0, 10 3, 0 6" fill="#6b62f2" />
+                    </marker>
+                  </defs>
+                  <path
+                    d={`M ${x} ${y} L ${nextX} ${nextY}`}
+                    stroke="#e8e5f2"
+                    strokeWidth="2"
+                    fill="none"
+                    markerEnd={`url(#arrowhead-${idx})`}
+                  />
+
+                  {/* Animated flow dot */}
+                  {shouldAnimate && (
+                    <circle cx={x + (nextX - x) * ((progress % (100 / stages.length)) / (100 / stages.length))}
+                            cy={y + (nextY - y) * ((progress % (100 / stages.length)) / (100 / stages.length))}
+                            r="5" fill="#6b62f2" opacity="0.8" />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Stage nodes */}
+            {stages.map((stage, idx) => {
+              const angle = (idx / stages.length) * Math.PI * 2 - Math.PI / 2;
+              const x = 400 + Math.cos(angle) * 150;
+              const y = 200 + Math.sin(angle) * 150;
+
+              return (
+                <g key={idx}>
+                  {/* Glow effect */}
+                  <circle cx={x} cy={y} r="42" fill={`url(#gradient-${idx})`} opacity="0.2" />
+                  <defs>
+                    <linearGradient id={`gradient-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#6b62f2" />
+                      <stop offset="100%" stopColor="#9b92d9" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Main circle */}
+                  <circle cx={x} cy={y} r="38" fill="white" stroke="#6b62f2" strokeWidth="3" />
+
+                  {/* Text */}
+                  <text x={x} y={y - 5} textAnchor="middle" className="text-[24px] font-bold" fill="#6b62f2">
+                    {stage.num}
+                  </text>
+                  <text x={x} y={y + 15} textAnchor="middle" className="text-[11px]" fill="#6b62f2" fontWeight="600">
+                    {stage.title.substring(0, 3)}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Stage Details Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {stages.map((stage, idx) => (
+            <div key={idx} className={`bg-gradient-to-br ${stage.color} bg-opacity-10 rounded-lg border border-opacity-20 p-4 text-center`}>
+              <div className="text-3xl mb-2">{stage.icon}</div>
+              <p className="text-[12px] font-bold text-[#17191c] tracking-wider">{stage.title}</p>
+              <p className="text-[11px] text-[#777b86] mt-1">{stage.desc}</p>
+              <div className="mt-2 px-2 py-1 bg-white rounded text-[10px] font-semibold text-[#6b62f2]">
+                {stage.sponsor}
               </div>
-            ))}
-          </div>
-          <div className="text-[12px] text-[#979799] font-medium">Health Data Sources</div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Arrow 1 */}
-        <div className="relative h-12 flex items-center justify-center">
-          <div className="w-full h-1 bg-gradient-to-r from-[#6b62f2] to-[#f0eefd]"></div>
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <div className="w-6 h-6 rounded-full bg-[#6b62f2] flex items-center justify-center">
-              <ArrowRight size={14} className="text-white" style={{
-                transform: `translateX(${animate * 0.5 - 25}%)`
-              }} />
+      {/* Process Explanation */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">📥</div>
+            <div>
+              <p className="font-semibold text-[13px] text-blue-900">Data Collection Loop</p>
+              <p className="text-[12px] text-blue-700 mt-1">Continuous real-time sync from Apple Health, Oura Ring, Calendar, and more. All health metrics flowing into a unified data stream.</p>
             </div>
           </div>
         </div>
-
-        {/* Row 2: Processing */}
-        <div className="flex gap-3 justify-center mb-8">
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Cloud size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">Nexla</p>
-            <p className="text-[11px] text-[#777b86]">Unify Data</p>
-          </div>
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Brain size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">Zero.xyz</p>
-            <p className="text-[11px] text-[#777b86]">Analyze</p>
-          </div>
-          <div className="p-4 bg-[#f5f3ff] rounded-lg border border-[#e8e5f2] text-center w-32">
-            <Cpu size={18} className="mx-auto mb-2 text-[#6b62f2]" />
-            <p className="text-[12px] font-medium text-[#6b62f2]">AWS</p>
-            <p className="text-[11px] text-[#777b86]">Learn</p>
-          </div>
-        </div>
-
-        {/* Arrow 2 */}
-        <div className="relative h-12 flex items-center justify-center">
-          <div className="w-full h-1 bg-gradient-to-r from-[#f0eefd] to-[#6b62f2]"></div>
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <div className="w-6 h-6 rounded-full bg-[#6b62f2] flex items-center justify-center">
-              <ArrowRight size={14} className="text-white" style={{
-                transform: `translateX(${25 - animate * 0.5}%)`
-              }} />
+        <div className="bg-purple-50 rounded-lg border border-purple-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">🧠</div>
+            <div>
+              <p className="font-semibold text-[13px] text-purple-900">AI Analysis & Decision</p>
+              <p className="text-[12px] text-purple-700 mt-1">Multi-agent system analyzes patterns, debates options, and reaches consensus on optimal health interventions automatically.</p>
             </div>
           </div>
         </div>
-
-        {/* Row 3: Actions */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-4 bg-[#fff5e6] rounded-lg border border-[#ffe8cc] text-center flex-1">
-            <Lock size={18} className="mx-auto mb-2 text-orange-600" />
-            <p className="text-[12px] font-medium text-orange-600">Pomerium</p>
-            <p className="text-[11px] text-[#777b86]">Authorize</p>
-          </div>
-          <ArrowRight size={18} className="text-[#6b62f2]" />
-          <div className="p-4 bg-[#e6f9f0] rounded-lg border border-[#b3e5db] text-center flex-1">
-            <CheckCircle size={18} className="mx-auto mb-2 text-green-600" />
-            <p className="text-[12px] font-medium text-green-600">Execute</p>
-            <p className="text-[11px] text-[#777b86]">Apply Changes</p>
+        <div className="bg-orange-50 rounded-lg border border-orange-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">⚡</div>
+            <div>
+              <p className="font-semibold text-[13px] text-orange-900">Action Execution</p>
+              <p className="text-[12px] text-orange-700 mt-1">Authorized changes applied directly: calendar updates, notifications, screen blocking, and personalized recommendations.</p>
+            </div>
           </div>
         </div>
-
-        <p className="text-[12px] text-[#979799] text-center mt-4">Real-time data flow with multi-agent coordination</p>
+        <div className="bg-green-50 rounded-lg border border-green-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">📈</div>
+            <div>
+              <p className="font-semibold text-[13px] text-green-900">Continuous Learning</p>
+              <p className="text-[12px] text-green-700 mt-1">System observes outcomes and learns. Strategy weights improve with each loop iteration for better future decisions.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -408,44 +484,272 @@ function StageProgress({ currentStageIdx }: { currentStageIdx: number }) {
 /* ─── TAB PAGES ──────────────────────────────── */
 function DataSourcesPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const integrations = backendState?.integrations;
-  const sourceStatus = integrations?.nexla?.configured ? "Nexla Live" : "Demo Data";
+  const [nexlaData, setNexlaData] = useState<any>(null);
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  // Generate realistic demo data for visualization
+  const generateRealisticDemoData = () => {
+    return {
+      timestamp: new Date().toISOString(),
+      user_id: 'demo_user_001',
+      health_data: {
+        sleep: {
+          duration_hours: parseFloat((7.2 + Math.random() * 1.5).toFixed(1)),
+          quality_score: Math.floor(65 + Math.random() * 30),
+          deep_sleep: parseFloat((1.5 + Math.random() * 1).toFixed(1)),
+          hrv: Math.floor(35 + Math.random() * 30)
+        },
+        activity: {
+          steps: Math.floor(8000 + Math.random() * 3000),
+          distance_km: parseFloat((6 + Math.random() * 4).toFixed(1)),
+          calories: Math.floor(300 + Math.random() * 200)
+        },
+        schedule: {
+          events: [
+            { name: 'Morning Meeting', start: '09:00', duration_min: 60 },
+            { name: 'Team Sync', start: '14:00', duration_min: 30 }
+          ]
+        }
+      }
+    };
+  };
+
+  // Fetch live data from Nexla (or generate realistic demo)
+  const syncNexlaData = async () => {
+    try {
+      setSyncing(true);
+
+      // Try to fetch real data first
+      const response = await fetch('/api/nexla/webhook');
+      let data = null;
+
+      if (response.ok) {
+        const result = await response.json();
+        data = result.data;
+      } else {
+        // Generate realistic demo data for visualization
+        data = generateRealisticDemoData();
+      }
+
+      if (data) {
+        setNexlaData(data);
+        setIsLiveMode(true);
+        setLastSyncTime(new Date().toLocaleTimeString());
+      }
+    } catch (error) {
+      console.error('Failed to sync Nexla data:', error);
+      // Generate realistic demo data as fallback for demo purposes
+      const data = generateRealisticDemoData();
+      setNexlaData(data);
+      setIsLiveMode(true);
+      setLastSyncTime(new Date().toLocaleTimeString());
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    // Auto-sync every 30 seconds (only if already in live mode)
+    if (isLiveMode) {
+      const interval = setInterval(syncNexlaData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isLiveMode]);
+
+  // Map Nexla data to data sources with live values
+  const getSourceWithLiveData = (source: any) => {
+    const liveSource = { ...source, liveValues: [] as any[] };
+
+    if (isLiveMode && nexlaData) {
+      const sleepData = nexlaData.health_data?.sleep || {};
+      const activityData = nexlaData.health_data?.activity || {};
+      const scheduleData = nexlaData.health_data?.schedule || { events: [] };
+
+      // Assign live data based on source
+      if (source.name === 'Apple Health') {
+        liveSource.liveValues = [
+          { label: 'Heart Rate', value: '62 bpm', status: 'normal' },
+          { label: 'Steps', value: `${activityData.steps || 0}`, status: 'tracking' },
+          { label: 'Sleep', value: `${sleepData.duration_hours || 0}h`, status: sleepData.duration_hours > 7 ? 'good' : 'warning' },
+          { label: 'Workouts', value: scheduleData.events?.length ? 'Scheduled' : 'None', status: 'info' }
+        ];
+      } else if (source.name === 'Oura Ring') {
+        liveSource.liveValues = [
+          { label: 'Sleep Score', value: `${sleepData.quality_score || 0}%`, status: sleepData.quality_score > 70 ? 'good' : 'warning' },
+          { label: 'HRV', value: `${sleepData.hrv || 0}ms`, status: sleepData.hrv > 50 ? 'good' : 'warning' },
+          { label: 'Temperature', value: 'Normal', status: 'normal' },
+          { label: 'Movement', value: `${activityData.steps || 0} steps`, status: 'tracking' }
+        ];
+      } else if (source.name === 'Google Calendar') {
+        const events = scheduleData.events || [];
+        liveSource.liveValues = [
+          { label: 'Events', value: `${events.length} today`, status: 'info' },
+          { label: 'Duration', value: events.length > 0 ? `${events[0]?.duration_min || 0}min` : 'No meetings', status: 'info' },
+          { label: 'Attendees', value: 'Multiple', status: 'info' },
+          { label: 'Location', value: events.length > 0 ? 'Scheduled' : 'None', status: 'info' }
+        ];
+      } else if (source.name === 'Whoop') {
+        liveSource.liveValues = [
+          { label: 'Strain', value: 'Moderate', status: 'info' },
+          { label: 'Recovery', value: `${sleepData.quality_score || 0}%`, status: sleepData.quality_score > 70 ? 'good' : 'warning' },
+          { label: 'Training', value: 'Active', status: 'info' },
+          { label: 'HR Data', value: `${sleepData.hrv || 0}ms HRV`, status: 'tracking' }
+        ];
+      } else if (source.name === 'Strava') {
+        liveSource.liveValues = [
+          { label: 'Running', value: activityData.distance_km ? 'Active' : 'None', status: 'info' },
+          { label: 'Cycling', value: 'Tracked', status: 'info' },
+          { label: 'Distance', value: `${activityData.distance_km || 0}km`, status: 'tracking' },
+          { label: 'Elevation', value: 'Recorded', status: 'info' },
+          { label: 'Pace', value: 'Optimal', status: 'info' },
+          { label: 'Power', value: 'Measured', status: 'info' }
+        ];
+      } else if (source.name === 'Gmail') {
+        liveSource.liveValues = [
+          { label: 'Messages', value: '12 unread', status: 'warning' },
+          { label: 'Senders', value: 'Multiple', status: 'info' },
+          { label: 'Priority', value: '3 important', status: 'warning' },
+          { label: 'Time', value: 'Last hour', status: 'info' }
+        ];
+      }
+    }
+
+    return liveSource;
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-medium text-[#17191c] mb-1">Connected Data Sources</h2>
-        <p className="text-[14px] text-[#777b86]">Your health data is securely synchronized in real-time</p>
+        <p className="text-[14px] text-[#777b86]">Your health data is securely synchronized in real-time from Nexla</p>
       </div>
 
+      {/* Sync Control Panel */}
+      <div className="bg-gradient-to-r from-[#6b62f2] to-[#9b92d9] rounded-lg p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Cloud size={20} />
+            <div>
+              <p className="font-bold text-[15px]">🔗 Nexla Real-Time Sync</p>
+              <p className="text-[12px] opacity-90">Auto-syncs every 30 seconds</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {lastSyncTime && (
+              <p className="text-[12px] opacity-90">Last sync: {lastSyncTime}</p>
+            )}
+            <button
+              onClick={syncNexlaData}
+              disabled={syncing}
+              className="px-4 py-2 bg-white text-[#6b62f2] font-bold rounded-lg hover:bg-opacity-90 disabled:opacity-50 transition-all text-[13px]"
+            >
+              {syncing ? '⏳ Syncing...' : '🔄 Sync Now'}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-bold ${
+            isLiveMode
+              ? 'bg-white bg-opacity-20'
+              : 'bg-white bg-opacity-10'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-white animate-pulse' : 'bg-white opacity-50'}`}></span>
+            {isLiveMode ? '🟢 LIVE DATA (Demo)' : '🔵 DEMO MODE'}
+          </div>
+          <div className="text-[12px] opacity-90">
+            {isLiveMode ? '✅ Showing realistic demo health data' : '📊 Click "Sync Now" to load demo health data'}
+          </div>
+        </div>
+      </div>
+
+      {/* Data Sources Grid */}
       <div className="grid gap-4">
-        {DATA_SOURCES.map((source) => (
-          <div key={source.name} className="bg-white rounded-lg border border-[#ececec] p-5 hover:border-[#6b62f2] transition-all">
-            <div className="flex items-start gap-4">
-              <div className="text-4xl">{source.icon}</div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-[#17191c]">{source.name}</p>
-                    <p className="text-[12px] text-[#979799]">{source.category}</p>
+        {DATA_SOURCES.map((source) => {
+          const sourceWithLive = getSourceWithLiveData(source);
+          return (
+            <div key={source.name} className={`rounded-lg border-2 p-5 transition-all ${
+              isLiveMode
+                ? 'bg-gradient-to-br from-white to-[#f5f3ff] border-[#6b62f2]'
+                : 'bg-white border-[#ececec] hover:border-[#6b62f2]'
+            }`}>
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">{source.icon}</div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold text-[15px] text-[#17191c]">{source.name}</p>
+                      <p className="text-[12px] text-[#777b86]">{source.category}</p>
+                    </div>
+                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
+                      isLiveMode
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-[#f2f2f3] text-[#777b86]'
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-green-600 animate-pulse' : 'bg-[#979799]'}`}></div>
+                      {isLiveMode ? '🟢 Live' : 'Demo'}
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium ${
-                    integrations?.nexla?.configured ? "bg-green-50 text-green-700" : "bg-[#f2f2f3] text-[#777b86]"
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${integrations?.nexla?.configured ? "bg-green-500 animate-pulse" : "bg-[#979799]"}`}></div>
-                    {sourceStatus}
+
+                  {/* Live Data Values */}
+                  {isLiveMode && sourceWithLive.liveValues.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                      {sourceWithLive.liveValues.map((val, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-2.5 border border-[#e8e5f2]">
+                          <p className="text-[10px] text-[#777b86] font-semibold uppercase mb-1">{val.label}</p>
+                          <p className={`text-[13px] font-bold ${
+                            val.status === 'good' ? 'text-green-600' :
+                            val.status === 'warning' ? 'text-orange-600' :
+                            val.status === 'info' ? 'text-[#6b62f2]' :
+                            'text-[#17191c]'
+                          }`}>
+                            {val.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {/* Data Points Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {source.dataPoints.map(point => (
+                      <span key={point} className={`px-2.5 py-1 text-[11px] font-medium rounded-full border ${
+                        isLiveMode
+                          ? 'bg-[#6b62f2] text-white border-[#6b62f2]'
+                          : 'bg-[#f0eefd] text-[#6b62f2] border-[#e8e5f2]'
+                      }`}>
+                        {point}
+                      </span>
+                    ))}
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {source.dataPoints.map(point => (
-                    <span key={point} className="px-2 py-1 bg-[#f0eefd] text-[#6b62f2] text-[11px] rounded-full border border-[#e8e5f2]">
-                      {point}
-                    </span>
-                  ))}
                 </div>
               </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Nexla Status */}
+      <div className={`rounded-lg border p-4 ${
+        isLiveMode
+          ? 'bg-green-50 border-green-200'
+          : 'bg-blue-50 border-blue-200'
+      }`}>
+        <div className="flex items-start gap-3">
+          <Cloud size={18} className={`${isLiveMode ? 'text-green-600' : 'text-blue-600'} mt-0.5`} />
+          <div>
+            <p className={`font-bold text-[13px] ${isLiveMode ? 'text-green-900' : 'text-blue-900'}`}>
+              📡 {isLiveMode ? '✅ Demo Health Data Loaded' : '🔵 Ready for Demo'}
+            </p>
+            <p className={`text-[12px] mt-1 ${isLiveMode ? 'text-green-700' : 'text-blue-700'}`}>
+              {isLiveMode
+                ? '✅ Displaying realistic demo health data from 6 sources (Apple Health, Oura Ring, Calendar, Whoop, Strava, Gmail). Click "Sync Now" to refresh with new demo data.'
+                : '📊 Click "Sync Now" to load realistic demo health data and see how the system processes real-world health information.'}
+            </p>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -529,59 +833,107 @@ function AgentWorkflowVisualization() {
   const [activeAgentIdx, setActiveAgentIdx] = useState(0);
   const [messageIdx, setMessageIdx] = useState(0);
 
+  const demoScenario = {
+    title: "Today's Health Situation",
+    input: [
+      { label: 'Sleep Last Night', value: '5.2 hours', status: 'warning' },
+      { label: 'HRV Reading', value: '28 ms', status: 'critical' },
+      { label: 'Recovery Score', value: '23%', status: 'warning' },
+      { label: 'Scheduled', value: '7am HIIT Workout', status: 'alert' }
+    ]
+  };
+
   const agents = [
     {
       name: 'Data Collector',
-      icon: '📥',
-      color: 'bg-blue-50',
+      emoji: '📥',
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       textColor: 'text-blue-700',
+      role: 'Gathers & Normalizes',
       messages: [
-        '📊 Received: Sleep 7.2h, HRV 28ms, Recovery 23%',
-        '📅 Received: HIIT scheduled at 7am',
-        '🌡️ Received: Weather 72°F, clear skies',
-        '✓ Data collection complete - 15 data points'
+        '📥 Syncing from Apple Health...',
+        '📥 Syncing from Oura Ring...',
+        '📥 Syncing from Google Calendar...',
+        '📊 Sleep: 5.2h (poor ⚠️)',
+        '❤️ HRV: 28ms (critically low ⛔)',
+        '💪 Recovery: 23% (needs rest)',
+        '📅 Event: 7am HIIT (high intensity)',
+        '✅ Data ready for analysis'
       ]
     },
     {
       name: 'Planner Agent',
-      icon: '📋',
-      color: 'bg-purple-50',
+      emoji: '💡',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
       textColor: 'text-purple-700',
+      role: 'Generates Options',
       messages: [
-        '🧠 Analyzing health status...',
-        '💡 Option 1: Keep HIIT (high intensity)',
-        '💡 Option 2: Light workout (low intensity)',
-        '💡 Option 3: Rest day (recovery focus)',
-        '✓ Generated 3 strategic options'
+        '🧠 Analyzing situation...',
+        '⚠️ Alert: Poor sleep + low HRV + low recovery',
+        '🤔 Evaluating workout options...',
+        '💡 Option 1: Do HIIT as planned',
+        '   - Pro: Maintains schedule',
+        '   - Con: Risk overtraining, low recovery',
+        '💡 Option 2: Light 20min walk',
+        '   - Pro: Gentle movement, aids recovery',
+        '   - Con: Skips scheduled workout',
+        '💡 Option 3: Complete rest day',
+        '   - Pro: Maximum recovery',
+        '   - Con: Breaks routine consistency',
+        '✅ 3 viable options generated'
       ]
     },
     {
       name: 'Critic Agent',
-      icon: '🔍',
-      color: 'bg-orange-50',
+      emoji: '🔍',
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
       textColor: 'text-orange-700',
+      role: 'Evaluates & Approves',
       messages: [
-        '⚖️ Evaluating Option 1: HIIT workout...',
-        '❌ REJECT: HRV too low (28ms < 40ms threshold)',
-        '✅ APPROVE: Option 2 - Light 20min walk safe',
-        '✓ Reasoning: Recovery + low strain = optimal'
+        '⚖️ Safety Check - Option 1: HIIT',
+        '❌ HRV = 28ms, threshold = 40ms minimum',
+        '❌ Risk: Overtraining in recovery state',
+        '❌ REJECT - Safety concern',
+        '⚖️ Safety Check - Option 2: Light Walk',
+        '✅ Safe for recovery state',
+        '✅ Aids parasympathetic activation',
+        '✅ Low strain, high benefit',
+        '✅ APPROVE',
+        '⚖️ Safety Check - Option 3: Rest',
+        '✅ Also safe, more conservative',
+        '⚠️ Lower engagement, habit-breaking',
+        '💭 Consensus: Option 2 is optimal balance'
       ]
     },
     {
       name: 'Optimizer',
-      icon: '⚡',
-      color: 'bg-green-50',
+      emoji: '⚡',
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       textColor: 'text-green-700',
+      role: 'Plans Execution',
       messages: [
-        '🎯 Building final recommendation...',
-        '+ Add: 20min morning walk at 7:30am',
-        '+ Add: Magnesium supplement 9pm',
-        '+ Block: Screens after 10:30pm',
-        '✓ Consensus reached - 4 actions approved'
+        '🎯 Building action plan...',
+        '📅 REMOVE: 7am HIIT (unsafe)',
+        '✅ ADD: 7:30am Light Walk',
+        '   Duration: 20 minutes',
+        '   Pace: Easy conversational speed',
+        '   Type: Outdoor (vitamin D boost)',
+        '🔔 ADD: Magnesium reminder at 9pm',
+        '   Purpose: Sleep quality improvement',
+        '🌙 ADD: Screen block after 10:30pm',
+        '   Why: Circadian rhythm support',
+        '💤 ADD: Set bedtime alarm for 10:00pm',
+        '   Ensures 8h sleep for recovery',
+        '✅ FINAL: 4 actions approved',
+        '✅ Consensus reached - Ready to execute'
       ]
     },
   ];
@@ -606,119 +958,198 @@ function AgentWorkflowVisualization() {
 
   return (
     <div className="space-y-6">
-      {/* Agent Flow Diagram */}
-      <div className="bg-white rounded-lg border border-[#ececec] p-8">
-        <h3 className="text-[15px] font-medium text-[#17191c] mb-8">Agent Reasoning Workflow</h3>
+      {/* Demo Scenario Header */}
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border-2 border-red-300 p-6">
+        <div className="flex items-start gap-4">
+          <div className="text-4xl">⚠️</div>
+          <div className="flex-1">
+            <h3 className="text-[16px] font-bold text-red-900 mb-3">{demoScenario.title}</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {demoScenario.input.map((item, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-3 border border-red-200">
+                  <p className="text-[11px] text-red-700 font-semibold uppercase mb-1">{item.label}</p>
+                  <p className={`text-[14px] font-bold ${
+                    item.status === 'critical' ? 'text-red-700' :
+                    item.status === 'warning' ? 'text-orange-600' :
+                    'text-red-600'
+                  }`}>
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
-        {/* Visual Flow */}
-        <div className="grid grid-cols-4 gap-4 mb-12">
+      {/* Main Workflow Visualization */}
+      <div className="bg-gradient-to-br from-[#fafafb] to-white rounded-lg border-2 border-[#6b62f2] p-8">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Brain size={18} className="text-[#6b62f2]" />
+            <h3 className="text-[17px] font-bold text-[#17191c]">🤖 How AI Agents Reason & Decide</h3>
+          </div>
+          <p className="text-[13px] text-[#777b86]">Watch 4 specialized agents analyze the situation above and reach consensus</p>
+        </div>
+
+        {/* Agent Flow Diagram */}
+        <div className="grid grid-cols-4 gap-2 mb-10">
           {agents.map((agent, idx) => (
-            <div
-              key={idx}
-              onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform ${
-                activeAgentIdx === idx
-                  ? `${agent.borderColor} ${agent.color} ring-2 ring-offset-2 ring-[#6b62f2] scale-105`
-                  : 'border-[#ececec] bg-[#fafafb] hover:border-[#6b62f2]'
-              }`}
-            >
-              <div className="text-3xl mb-2">{agent.icon}</div>
-              <p className={`text-[13px] font-semibold ${activeAgentIdx === idx ? agent.textColor : 'text-[#17191c]'}`}>
-                {agent.name}
-              </p>
-              <div className={`w-full h-1 rounded-full mt-2 ${activeAgentIdx === idx ? agent.color : 'bg-[#ececec]'}`}></div>
+            <div key={idx} className="flex flex-col items-center">
+              {/* Agent Node */}
+              <button
+                onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
+                className={`w-full p-4 rounded-lg border-2 cursor-pointer transition-all transform mb-2 ${
+                  activeAgentIdx === idx
+                    ? `${agent.bgColor} ${agent.borderColor} ring-2 ring-offset-2 ring-[#6b62f2] scale-105 shadow-lg`
+                    : 'border-[#ececec] bg-white hover:border-[#6b62f2]'
+                }`}
+              >
+                <div className="text-4xl mb-2 text-center">{agent.emoji}</div>
+                <p className={`text-[13px] font-bold text-center ${activeAgentIdx === idx ? agent.textColor : 'text-[#17191c]'}`}>
+                  {agent.name}
+                </p>
+                <p className="text-[10px] text-[#777b86] text-center mt-1 font-medium">{agent.role}</p>
+              </button>
+
+              {/* Arrow to next agent */}
+              {idx < agents.length - 1 && (
+                <div className={`text-2xl my-2 ${activeAgentIdx > idx ? 'text-green-600' : 'text-[#ddd]'}`}>
+                  ↓
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Animated Arrows Between Agents */}
-        <div className="relative h-2 bg-gradient-to-r from-[#6b62f2] to-[#6b62f2] rounded-full mb-12 overflow-hidden">
-          <div
-            className="absolute h-full bg-white rounded-full animate-pulse"
-            style={{
-              width: '20%',
-              left: `${(activeAgentIdx / (agents.length - 1)) * 80}%`,
-              transition: 'left 0.3s ease'
-            }}
-          ></div>
-        </div>
-
-        {/* Current Agent Details */}
-        <div className={`${agents[activeAgentIdx].color} border-2 ${agents[activeAgentIdx].borderColor} rounded-lg p-6`}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="text-4xl">{agents[activeAgentIdx].icon}</div>
-            <div>
-              <p className={`text-[18px] font-semibold ${agents[activeAgentIdx].textColor}`}>
-                {agents[activeAgentIdx].name}
-              </p>
-              <p className="text-[12px] text-[#777b86]">Processing...</p>
+        {/* Current Agent Details Panel */}
+        <div className={`${agents[activeAgentIdx].bgColor} border-2 ${agents[activeAgentIdx].borderColor} rounded-lg p-6 min-h-[400px]`}>
+          <div className="mb-6 pb-6 border-b-2 border-opacity-30">
+            <div className="flex items-center gap-4 mb-3">
+              <div className={`text-5xl`}>{agents[activeAgentIdx].emoji}</div>
+              <div className="flex-1">
+                <p className={`text-[20px] font-bold ${agents[activeAgentIdx].textColor}`}>
+                  {agents[activeAgentIdx].name}
+                </p>
+                <p className={`text-[12px] font-semibold ${agents[activeAgentIdx].textColor} opacity-75`}>
+                  → {agents[activeAgentIdx].role}
+                </p>
+              </div>
+              <span className={`text-[12px] px-3 py-1.5 rounded-full font-bold whitespace-nowrap ${
+                activeAgentIdx === agents.length - 1
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-[#6b62f2] text-white'
+              }`}>
+                {activeAgentIdx === agents.length - 1 ? '✅ Final Decision' : `📍 Step ${activeAgentIdx + 1} of 4`}
+              </span>
             </div>
           </div>
 
           {/* Message Stream */}
-          <div className="space-y-2">
-            {agents[activeAgentIdx].messages.slice(0, messageIdx).map((msg, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 bg-white rounded border-l-2 border-[#6b62f2] animate-slide-in">
-                <span className="text-[14px] leading-relaxed text-[#17191c]">{msg}</span>
-              </div>
-            ))}
+          <div className="space-y-1 font-mono text-[13px]">
+            {agents[activeAgentIdx].messages.slice(0, messageIdx).map((msg, i) => {
+              const isIndented = msg.startsWith('   ');
+              const isResult = msg.includes('✅') || msg.includes('✓') || msg.includes('❌');
+              return (
+                <div
+                  key={i}
+                  className={`animate-fade-in py-1 px-3 rounded transition-all ${
+                    isResult
+                      ? 'bg-white border-l-4 border-green-500 text-green-700'
+                      : msg.includes('❌')
+                      ? 'bg-white border-l-4 border-red-500 text-red-700'
+                      : msg.includes('⚠️')
+                      ? 'bg-white border-l-4 border-orange-500 text-orange-700'
+                      : 'bg-white text-[#17191c]'
+                  } ${isIndented ? 'ml-4 text-[12px]' : ''}`}
+                >
+                  <span className="font-mono">{msg}</span>
+                </div>
+              );
+            })}
             {messageIdx < agents[activeAgentIdx].messages.length && (
-              <div className="flex items-start gap-2 p-2 bg-white rounded border-l-2 border-[#6b62f2] animate-pulse">
-                <span className="text-[14px] font-mono text-[#6b62f2]">█</span>
+              <div className="flex items-center gap-2 text-[#6b62f2] animate-pulse py-1 px-3">
+                <span className="text-lg">▌</span>
+                <span className="text-[12px] font-mono">Thinking...</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Agent Cards */}
+      {/* Step Explanations */}
       <div className="grid grid-cols-2 gap-4">
-        {agents.map((agent, idx) => (
-          <div
-            key={idx}
-            onClick={() => { setActiveAgentIdx(idx); setMessageIdx(0); }}
-            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-              activeAgentIdx === idx
-                ? `${agent.borderColor} ${agent.color}`
-                : 'border-[#ececec] bg-white hover:border-[#6b62f2]'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-3xl">{agent.icon}</div>
-              <div className="flex-1">
-                <p className="text-[14px] font-semibold text-[#17191c]">{agent.name}</p>
-                <p className="text-[12px] text-[#979799] mt-1">
-                  {activeAgentIdx === idx ? (
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-[#6b62f2] animate-pulse"></span>
-                      Active
-                    </span>
-                  ) : (
-                    'Ready'
-                  )}
-                </p>
-              </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-50/50 rounded-lg border-2 border-blue-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">📥</div>
+            <div>
+              <p className="font-bold text-[13px] text-blue-900">Step 1: Collector</p>
+              <p className="text-[12px] text-blue-700 mt-1">Syncs Apple Health, Oura Ring, Calendar → Discovers poor sleep (5.2h), critically low HRV (28ms), and dangerous workout scheduled</p>
             </div>
           </div>
-        ))}
+        </div>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-lg border-2 border-purple-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">💡</div>
+            <div>
+              <p className="font-bold text-[13px] text-purple-900">Step 2: Planner</p>
+              <p className="text-[12px] text-purple-700 mt-1">Analyzes situation → Creates 3 options: (1) Do HIIT as planned, (2) Light walk, (3) Rest day</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-50/50 rounded-lg border-2 border-orange-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">⚖️</div>
+            <div>
+              <p className="font-bold text-[13px] text-orange-900">Step 3: Critic</p>
+              <p className="text-[12px] text-orange-700 mt-1">Evaluates options → REJECTS HIIT (HRV too low), APPROVES Light walk (safe & beneficial)</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-50/50 rounded-lg border-2 border-green-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">⚡</div>
+            <div>
+              <p className="font-bold text-[13px] text-green-900">Step 4: Optimizer</p>
+              <p className="text-[12px] text-green-700 mt-1">Plans execution → Cancel HIIT, add light walk 7:30am, magnesium reminder, screen block</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Workflow Summary */}
-      <div className="bg-[#f5f3ff] border border-[#e8e5f2] rounded-lg p-6">
-        <h3 className="text-[15px] font-medium text-[#6b62f2] mb-4">📊 Consensus Summary</h3>
-        <div className="grid grid-cols-2 gap-4">
+      {/* Final Decision Box */}
+      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white border-2 border-green-600">
+        <div className="flex items-center gap-3 mb-5">
+          <CheckCircle size={24} />
+          <h3 className="text-[18px] font-bold">✅ CONSENSUS REACHED - Final Decision</h3>
+        </div>
+
+        <div className="bg-white bg-opacity-10 rounded-lg p-4 mb-4 border border-green-300 border-opacity-30">
+          <p className="text-[14px] font-bold mb-3">🚫 CANCELLED:</p>
+          <p className="text-[13px] opacity-95 ml-3">7:00 AM HIIT Workout (HRV too low, injury risk)</p>
+        </div>
+
+        <div className="bg-white bg-opacity-10 rounded-lg p-4 border border-green-300 border-opacity-30">
+          <p className="text-[14px] font-bold mb-3">✅ APPROVED ACTIONS:</p>
+          <div className="space-y-2 ml-3 text-[13px] opacity-95">
+            <p>🚶 7:30 AM - Light 20min Walk (outdoor, easy pace)</p>
+            <p>🔔 9:00 PM - Magnesium supplement reminder</p>
+            <p>📵 10:30 PM - Enable screen blocking</p>
+            <p>💤 10:00 PM - Bedtime reminder (8h sleep)</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-3 mt-5">
           {[
             { icon: '✅', label: 'Actions Approved', value: '4' },
-            { icon: '⚖️', label: 'Evaluations', value: '3' },
-            { icon: '💡', label: 'Options Generated', value: '3' },
-            { icon: '⏱️', label: 'Processing Time', value: '2.3s' },
+            { icon: '⚖️', label: 'Options Evaluated', value: '3' },
+            { icon: '❌', label: 'Rejected', value: '1' },
+            { icon: '⚡', label: 'Time', value: '2.3s' },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="text-2xl">{item.icon}</div>
-              <div>
-                <p className="text-[12px] text-[#777b86]">{item.label}</p>
-                <p className="text-[16px] font-semibold text-[#6b62f2]">{item.value}</p>
-              </div>
+            <div key={i} className="bg-white bg-opacity-10 rounded-lg p-3 text-center border border-green-300 border-opacity-20">
+              <div className="text-2xl mb-1">{item.icon}</div>
+              <p className="text-[10px] opacity-75 mb-1">{item.label}</p>
+              <p className="text-[14px] font-bold">{item.value}</p>
             </div>
           ))}
         </div>
@@ -743,32 +1174,366 @@ function AgentReasoningPage() {
 function DataFlowPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const integrations = backendState?.integrations;
   const sponsorRows = integrations ? Object.entries(integrations) : [];
+  const [animationStage, setAnimationStage] = useState(0);
+  const [liveData, setLiveData] = useState<any>(null);
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  // Fetch live data from Nexla
+  const fetchLiveData = async () => {
+    try {
+      setDataLoading(true);
+      const response = await fetch('/api/nexla/webhook');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          setLiveData(result.data);
+          setIsLiveMode(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch live data:', error);
+      setIsLiveMode(false);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Try to fetch live data on mount
+    fetchLiveData();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationStage(prev => (prev + 1) % 6);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Build flowStages with real data when available
+  const getFlowStages = () => {
+    const baseStages = [
+      {
+        num: '1️⃣',
+        name: 'COLLECT',
+        fullName: 'Data Collection',
+        sponsor: '🔗 Nexla',
+        input: 'Apple Health, Oura Ring, Calendar, Strava, Gmail',
+        output: 'Raw health metrics & schedules',
+        icon: '📥',
+        color: 'from-blue-500 to-blue-600',
+        bgLight: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        example: [] as string[]
+      },
+      {
+        num: '2️⃣',
+        name: 'DIAGNOSE',
+        fullName: 'Pattern Analysis',
+        sponsor: '🧠 Zero.xyz',
+        input: 'Normalized health data',
+        output: 'Health status & risks identified',
+        icon: '🔍',
+        color: 'from-purple-500 to-purple-600',
+        bgLight: 'bg-purple-50',
+        borderColor: 'border-purple-200',
+        example: [] as string[]
+      },
+      {
+        num: '3️⃣',
+        name: 'PLAN',
+        fullName: 'Strategy Generation',
+        sponsor: '📋 Zero.xyz',
+        input: 'Health diagnosis & constraints',
+        output: '3 strategic options generated',
+        icon: '💡',
+        color: 'from-pink-500 to-pink-600',
+        bgLight: 'bg-pink-50',
+        borderColor: 'border-pink-200',
+        example: [] as string[]
+      },
+      {
+        num: '4️⃣',
+        name: 'ACT',
+        fullName: 'Action Execution',
+        sponsor: '⚡ Pomerium',
+        input: 'Approved decisions',
+        output: 'Calendar & system changes',
+        icon: '✅',
+        color: 'from-orange-500 to-orange-600',
+        bgLight: 'bg-orange-50',
+        borderColor: 'border-orange-200',
+        example: [] as string[]
+      },
+      {
+        num: '5️⃣',
+        name: 'OBSERVE',
+        fullName: 'Outcome Tracking',
+        sponsor: '📊 Nexla',
+        input: 'Real-time metrics post-action',
+        output: 'Action effectiveness measured',
+        icon: '👁️',
+        color: 'from-cyan-500 to-cyan-600',
+        bgLight: 'bg-cyan-50',
+        borderColor: 'border-cyan-200',
+        example: [] as string[]
+      },
+      {
+        num: '6️⃣',
+        name: 'LEARN',
+        fullName: 'Model Improvement',
+        sponsor: '🤖 AWS',
+        input: 'Outcome data & results',
+        output: 'Strategy weights updated',
+        icon: '🔄',
+        color: 'from-green-500 to-green-600',
+        bgLight: 'bg-green-50',
+        borderColor: 'border-green-200',
+        example: [] as string[]
+      }
+    ];
+
+    // Populate with live data if available
+    if (isLiveMode && liveData) {
+      const sleepData = liveData.health_data?.sleep || {};
+      const activityData = liveData.health_data?.activity || {};
+      const scheduleData = liveData.health_data?.schedule || { events: [] };
+
+      baseStages[0].example = [
+        `Sleep: ${sleepData.duration_hours || 0}h`,
+        `HRV: ${sleepData.hrv || 0}ms`,
+        `Recovery: ${sleepData.quality_score || 0}%`
+      ];
+
+      baseStages[1].example = [
+        sleepData.quality_score < 60 ? 'Sleep debt' : 'Sleep optimal',
+        sleepData.hrv < 40 ? 'HRV low' : 'HRV good',
+        `Recovery: ${sleepData.quality_score}%`
+      ];
+
+      baseStages[2].example = [
+        sleepData.quality_score < 60 ? 'Option 1: Rest day' : 'Option 1: HIIT workout',
+        'Option 2: Light activity',
+        'Option 3: Balanced approach'
+      ];
+
+      baseStages[3].example = [
+        scheduleData.events?.length ? `Update ${scheduleData.events[0]?.name || 'calendar'}` : 'No schedule changes',
+        'Send health reminder',
+        'Block distractions'
+      ];
+
+      baseStages[4].example = [
+        `Steps: ${activityData.steps || 0}`,
+        `Calories: ${activityData.calories || 0}`,
+        `Distance: ${activityData.distance_km || 0}km`
+      ];
+
+      baseStages[5].example = [
+        sleepData.quality_score > 70 ? '✅ Sleep improved' : '📊 Sleep tracking',
+        `${sleepData.hrv > 50 ? '✅ HRV recovered' : '📊 HRV monitoring'}`,
+        'Strategy weights updated'
+      ];
+    } else {
+      // Demo data fallback
+      baseStages[0].example = ['Sleep: 7.2h', 'HRV: 28ms', 'Recovery: 23%'];
+      baseStages[1].example = ['HRV low', 'Sleep debt', 'Recovery poor'];
+      baseStages[2].example = ['Option 1: HIIT', 'Option 2: Light walk', 'Option 3: Rest day'];
+      baseStages[3].example = ['Reschedule workout', 'Add reminder', 'Block screens'];
+      baseStages[4].example = ['Sleep improved', 'HRV recovered', 'Recovery +44%'];
+      baseStages[5].example = ['Light walks effective', 'Screen blocks work', 'Caffeine cutoff helps'];
+    }
+
+    return baseStages;
+  };
+
+  const flowStages = getFlowStages();
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-medium text-[#17191c] mb-1">Data Flow Architecture</h2>
-        <p className="text-[14px] text-[#777b86]">How data moves through the LifeOS system</p>
+        <p className="text-[14px] text-[#777b86]">See how data flows through each stage of the autonomous loop in real-time</p>
       </div>
 
-      <DataFlowDiagram />
+      {/* LIVE DEMO: Interactive Data Flow */}
+      <div className="bg-gradient-to-br from-white to-[#fafafb] rounded-lg border-2 border-[#6b62f2] p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Activity size={20} className="text-[#6b62f2]" />
+            <h3 className="text-[18px] font-bold text-[#17191c]">🔴 LIVE DEMO: Data Flowing Right Now</h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchLiveData}
+              disabled={dataLoading}
+              className="px-3 py-2 bg-[#6b62f2] text-white text-[12px] font-semibold rounded-lg hover:bg-[#9b92d9] disabled:opacity-50 transition-all"
+            >
+              {dataLoading ? 'Loading...' : '🔄 Sync Nexla'}
+            </button>
+            <div className={`px-3 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 ${
+              isLiveMode
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-700'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-green-600 animate-pulse' : 'bg-blue-600'}`}></span>
+              {isLiveMode ? '🟢 LIVE DATA (Nexla)' : '🔵 DEMO DATA'}
+            </div>
+          </div>
+        </div>
 
+        {/* Horizontal Flow Diagram */}
+        <div className="overflow-x-auto mb-8">
+          <div className="flex gap-2 pb-4 min-w-max">
+            {flowStages.map((stage, idx) => (
+              <div key={idx} className="flex items-start flex-col">
+                {/* Stage Box */}
+                <div className={`w-40 rounded-lg border-2 p-4 transition-all transform ${
+                  animationStage === idx
+                    ? `${stage.bgLight} ${stage.borderColor} ring-2 ring-offset-2 ring-[#6b62f2] scale-110 shadow-lg`
+                    : 'bg-white border-[#ececec]'
+                }`}>
+                  <div className="text-3xl text-center mb-2">{stage.icon}</div>
+                  <p className="text-[12px] font-bold text-center text-[#17191c] mb-1">{stage.name}</p>
+                  <p className="text-[10px] text-center text-[#6b62f2] font-semibold">{stage.sponsor}</p>
+
+                  {/* Current Stage Indicator */}
+                  {animationStage === idx && (
+                    <div className="mt-2 pt-2 border-t border-[#6b62f2] border-opacity-30">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-[#6b62f2] animate-pulse"></div>
+                        <span className="text-[10px] font-bold text-[#6b62f2]">ACTIVE</span>
+                      </div>
+                      <p className="text-[9px] text-[#777b86]">Processing...</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Arrow to next stage */}
+                {idx < flowStages.length - 1 && (
+                  <div className="mt-3 text-2xl">
+                    <ArrowRight className="text-[#6b62f2]" size={20} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Current Stage Details */}
+        <div className={`${flowStages[animationStage].bgLight} border-2 ${flowStages[animationStage].borderColor} rounded-lg p-6`}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Input */}
+            <div>
+              <p className="text-[12px] font-bold text-[#6b62f2] uppercase tracking-wider mb-3">📥 Input</p>
+              <div className="bg-white rounded-lg p-3 border border-[#ececec]">
+                <p className="text-[13px] text-[#17191c] leading-relaxed font-medium">
+                  {flowStages[animationStage].input}
+                </p>
+              </div>
+            </div>
+
+            {/* Processing */}
+            <div>
+              <p className="text-[12px] font-bold text-[#6b62f2] uppercase tracking-wider mb-3">⚙️ Processing</p>
+              <div className="bg-white rounded-lg p-3 border border-[#ececec]">
+                <p className="text-[14px] font-bold text-[#17191c] mb-2">{flowStages[animationStage].fullName}</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#6b62f2] animate-pulse"></div>
+                  <span className="text-[12px] text-[#777b86]">Active now</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Output */}
+            <div>
+              <p className="text-[12px] font-bold text-[#6b62f2] uppercase tracking-wider mb-3">📤 Output</p>
+              <div className="bg-white rounded-lg p-3 border border-[#ececec]">
+                <p className="text-[13px] text-[#17191c] leading-relaxed font-medium">
+                  {flowStages[animationStage].output}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Real Example Data */}
+          <div className="mt-6 pt-6 border-t border-opacity-30 border-[#6b62f2]">
+            <p className="text-[12px] font-bold text-[#6b62f2] uppercase tracking-wider mb-3">📊 Example Data Now</p>
+            <div className="grid grid-cols-3 gap-2">
+              {flowStages[animationStage].example.map((item, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-3 border border-[#ececec] animate-fade-in">
+                  <p className="text-[12px] font-semibold text-[#17191c]">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-6 pt-6 border-t border-[#ececec]">
+          <p className="text-[12px] text-[#777b86] mb-2">Loop Progress (auto-cycles every 3 seconds)</p>
+          <div className="w-full bg-[#f2f2f3] rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#6b62f2] to-[#9b92d9] transition-all duration-300"
+              style={{ width: `${((animationStage + 1) / flowStages.length) * 100}%` }}
+            ></div>
+          </div>
+          <p className="text-[11px] text-[#6b62f2] font-semibold mt-2">
+            Stage {animationStage + 1} of {flowStages.length}: {flowStages[animationStage].name}
+          </p>
+        </div>
+      </div>
+
+      {/* Stage Cards Reference */}
+      <div>
+        <h3 className="text-[15px] font-semibold text-[#17191c] mb-4">Complete Data Flow Stages</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {flowStages.map((stage, idx) => (
+            <button
+              key={idx}
+              onClick={() => setAnimationStage(idx)}
+              className={`p-4 rounded-lg border-2 transition-all cursor-pointer text-left ${
+                animationStage === idx
+                  ? `${stage.bgLight} ${stage.borderColor} ring-2 ring-offset-2 ring-[#6b62f2]`
+                  : 'bg-white border-[#ececec] hover:border-[#6b62f2]'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">{stage.icon}</span>
+                <div>
+                  <p className="text-[13px] font-bold text-[#17191c]">{stage.name}</p>
+                  <p className="text-[11px] text-[#777b86]">{stage.sponsor}</p>
+                </div>
+              </div>
+              <div className="text-[11px] text-[#777b86] space-y-1">
+                <p><span className="font-semibold text-[#6b62f2]">In:</span> {stage.input}</p>
+                <p><span className="font-semibold text-[#6b62f2]">Out:</span> {stage.output}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Live Sponsor Status */}
       <div className="bg-white rounded-lg border border-[#ececec] p-6">
         <div className="flex items-center gap-2 mb-5">
           <Server size={16} className="text-[#6b62f2]" />
-          <h3 className="text-[15px] font-medium text-[#17191c]">Live Sponsor Status</h3>
+          <h3 className="text-[15px] font-medium text-[#17191c]">Live Sponsor Integration Status</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {sponsorRows.map(([key, integration]) => {
             const status = sponsorHealth(integration.mode, integration.configured);
+            const sponsorStage = flowStages.find(s => s.sponsor.includes(integration.sponsor));
             return (
               <div key={key} className="p-4 bg-[#fafafb] rounded-lg border border-[#ececec]">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
                     <p className="text-[14px] font-semibold text-[#17191c]">{integration.sponsor}</p>
                     <p className="text-[12px] text-[#777b86]">{integration.role}</p>
+                    {sponsorStage && <p className="text-[11px] text-[#6b62f2] mt-1">📍 Stage: {sponsorStage.name}</p>}
                   </div>
-                  <span className={`text-[11px] px-2 py-1 rounded-full font-medium ${
+                  <span className={`text-[11px] px-2 py-1 rounded-full font-medium flex-shrink-0 ${
                     status === "Live" ? "bg-green-50 text-green-700" :
                     status === "Fallback" ? "bg-yellow-50 text-yellow-700" :
                     "bg-[#f2f2f3] text-[#777b86]"
@@ -786,23 +1551,23 @@ function DataFlowPage({ backendState }: { backendState: AdaptiveHealthState | nu
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {[
-          { step: '1', title: 'Ingest', desc: 'Data collected from multiple sources', color: 'bg-blue-50' },
-          { step: '2', title: 'Unify', desc: 'Normalize and combine datasets', color: 'bg-purple-50' },
-          { step: '3', title: 'Analyze', desc: 'Multi-agent analysis & debate', color: 'bg-pink-50' },
-          { step: '4', title: 'Act', desc: 'Execute authorized actions', color: 'bg-green-50' },
-        ].map((item) => (
-          <div key={item.step} className={`${item.color} rounded-lg border border-[#ececec] p-4`}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-white border-2 border-[#6b62f2] flex items-center justify-center text-[12px] font-semibold text-[#6b62f2]">
-                {item.step}
-              </div>
-              <p className="font-medium text-[#17191c]">{item.title}</p>
-            </div>
-            <p className="text-[12px] text-[#777b86]">{item.desc}</p>
+      {/* Quick Reference */}
+      <div className="bg-gradient-to-r from-[#6b62f2] to-[#9b92d9] rounded-lg p-6 text-white">
+        <h3 className="text-[15px] font-bold mb-4">💡 How It Works</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[13px]">
+          <div>
+            <p className="font-bold mb-2">Input Phase (Stages 1-2)</p>
+            <p className="opacity-90">Data streams in from all your health apps. LifeOS continuously collects and analyzes patterns 24/7.</p>
           </div>
-        ))}
+          <div>
+            <p className="font-bold mb-2">Decision Phase (Stages 3-4)</p>
+            <p className="opacity-90">AI agents debate options and reach consensus. Approved decisions automatically execute through secure Pomerium bridge.</p>
+          </div>
+          <div>
+            <p className="font-bold mb-2">Learning Phase (Stages 5-6)</p>
+            <p className="opacity-90">System observes results and learns. Next loop iteration improves with better strategy weights.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1108,6 +1873,207 @@ function MetricsPage({ stage, backendState }: { stage: Stage; backendState: Adap
   );
 }
 
+function DietSuggestionPage() {
+  const suggestions = [
+    {
+      meal: 'Breakfast',
+      time: '7:00 AM',
+      recommendation: 'Protein-rich meal with carbs',
+      items: ['Eggs (3)', 'Oatmeal (1 cup)', 'Berries (½ cup)', 'Greek yogurt (½ cup)'],
+      calories: 450,
+      protein: 28,
+      carbs: 45,
+      fats: 12,
+      reason: 'Supports morning energy and muscle recovery after workouts'
+    },
+    {
+      meal: 'Mid-Morning Snack',
+      time: '10:30 AM',
+      recommendation: 'Light snack with hydration',
+      items: ['Banana', 'Almonds (1 oz)', 'Water (16 oz)'],
+      calories: 180,
+      protein: 6,
+      carbs: 22,
+      fats: 9,
+      reason: 'Maintains energy levels and prevents afternoon crashes'
+    },
+    {
+      meal: 'Lunch',
+      time: '12:30 PM',
+      recommendation: 'Balanced macronutrients',
+      items: ['Salmon (150g)', 'Brown rice (1 cup)', 'Broccoli (1.5 cups)', 'Olive oil drizzle'],
+      calories: 650,
+      protein: 42,
+      carbs: 55,
+      fats: 18,
+      reason: 'High omega-3 content supports cognitive function and recovery'
+    },
+    {
+      meal: 'Pre-Workout Snack',
+      time: '4:00 PM',
+      recommendation: 'Quick carbs & hydration',
+      items: ['Apple', 'Honey (1 tbsp)', 'Coconut water (8 oz)'],
+      calories: 140,
+      protein: 0.5,
+      carbs: 35,
+      fats: 0.5,
+      reason: 'Provides energy for evening workout sessions'
+    },
+    {
+      meal: 'Dinner',
+      time: '6:30 PM',
+      recommendation: 'Lean protein with vegetables',
+      items: ['Chicken breast (180g)', 'Sweet potato (medium)', 'Spinach salad (2 cups)', 'Vinaigrette'],
+      calories: 520,
+      protein: 46,
+      carbs: 48,
+      fats: 10,
+      reason: 'Supports muscle repair and stable sleep without heavy digestion'
+    },
+    {
+      meal: 'Evening Recovery',
+      time: '8:00 PM',
+      recommendation: 'Casein protein or dairy',
+      items: ['Cottage cheese (¾ cup)', 'Blueberries (½ cup)'],
+      calories: 160,
+      protein: 20,
+      carbs: 12,
+      fats: 4,
+      reason: 'Slow-digesting protein supports overnight muscle recovery'
+    },
+  ];
+
+  const nutritionTarget = {
+    calories: 2700,
+    protein: 142,
+    carbs: 217,
+    fats: 73,
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-medium text-[#17191c] mb-1">Diet Suggestions</h2>
+        <p className="text-[14px] text-[#777b86]">Personalized nutrition recommendations based on your goals and activity</p>
+      </div>
+
+      {/* Daily Target */}
+      <div className="bg-gradient-to-br from-[#f5f3ff] to-[#faf9ff] rounded-lg border border-[#e8e5f2] p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <Target size={16} className="text-[#6b62f2]" />
+          <span className="text-[15px] font-medium text-[#17191c]">Daily Nutrition Target</span>
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {[
+            { label: 'Calories', value: nutritionTarget.calories, unit: 'kcal', icon: '🔥' },
+            { label: 'Protein', value: nutritionTarget.protein, unit: 'g', icon: '💪' },
+            { label: 'Carbs', value: nutritionTarget.carbs, unit: 'g', icon: '🌾' },
+            { label: 'Fats', value: nutritionTarget.fats, unit: 'g', icon: '🥑' },
+          ].map(({ label, value, unit, icon }) => (
+            <div key={label} className="bg-white rounded-lg p-4 border border-[#ececec] text-center">
+              <p className="text-[28px] mb-1">{icon}</p>
+              <p className="text-[18px] font-semibold text-[#17191c]">{value}</p>
+              <p className="text-[12px] text-[#979799] mt-1">{label} ({unit})</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Meal Plans */}
+      <div className="space-y-4">
+        {suggestions.map(({ meal, time, recommendation, items, calories, protein, carbs, fats, reason }, idx) => (
+          <div key={idx} className="bg-white rounded-lg border border-[#ececec] p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[18px]">🍽️</span>
+                  <span className="text-[16px] font-semibold text-[#17191c]">{meal}</span>
+                  <span className="text-[12px] text-[#777b86] bg-[#f2f2f3] px-2 py-1 rounded">{time}</span>
+                </div>
+                <p className="text-[14px] text-[#777b86] font-medium">{recommendation}</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-[18px] font-semibold text-[#6b62f2]">{calories}</p>
+                <p className="text-[11px] text-[#979799]">kcal</p>
+              </div>
+            </div>
+
+            <div className="bg-[#fafafb] rounded-lg p-4 mb-4 border border-[#ececec]">
+              <p className="text-[12px] text-[#979799] uppercase tracking-[0.5px] mb-2 font-medium">Recommended Items</p>
+              <div className="flex flex-wrap gap-2">
+                {items.map((item, i) => (
+                  <span key={i} className="text-[13px] bg-white text-[#17191c] px-3 py-1.5 rounded-lg border border-[#ececec]">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: 'Protein', value: protein, unit: 'g' },
+                { label: 'Carbs', value: carbs, unit: 'g' },
+                { label: 'Fats', value: fats, unit: 'g' },
+              ].map(({ label, value, unit }) => (
+                <div key={label} className="bg-[#f5f3ff] rounded-lg p-3 border border-[#e8e5f2]">
+                  <p className="text-[11px] text-[#9b92d9] uppercase tracking-[0.5px] font-medium mb-1">{label}</p>
+                  <p className="text-[16px] font-semibold text-[#6b62f2]">{value}g</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-[#e8f5ff] rounded-lg p-3 border border-[#b3d9ff]">
+              <p className="text-[12px] text-[#0066cc] font-medium">💡 Why this meal:</p>
+              <p className="text-[13px] text-[#003399] mt-1">{reason}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hydration Guide */}
+      <div className="bg-white rounded-lg border border-[#ececec] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Droplet size={16} className="text-[#6b62f2]" />
+          <span className="text-[15px] font-medium text-[#17191c]">Hydration Guide</span>
+        </div>
+        <div className="space-y-3">
+          {[
+            { time: 'Morning (7am-9am)', amount: '500ml', note: 'Rehydrate after sleep' },
+            { time: 'Mid-morning (10am)', amount: '300ml', note: 'Before snack' },
+            { time: 'Lunch (12pm-1pm)', amount: '400ml', note: 'With meal' },
+            { time: 'Pre-workout (4pm)', amount: '400ml', note: 'Prepare for exercise' },
+            { time: 'Post-workout (6pm)', amount: '500ml', note: 'Recovery hydration' },
+            { time: 'Evening (7pm-9pm)', amount: '300ml', note: 'Light hydration before bed' },
+          ].map(({ time, amount, note }, idx) => (
+            <div key={idx} className="flex items-center justify-between p-3 bg-[#fafafb] rounded-lg border border-[#ececec]">
+              <div>
+                <p className="text-[13px] font-medium text-[#17191c]">{time}</p>
+                <p className="text-[12px] text-[#979799]">{note}</p>
+              </div>
+              <span className="text-[14px] font-semibold text-[#6b62f2]">{amount}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dietary Notes */}
+      <div className="bg-[#fff5f5] rounded-lg border border-[#ffcccc] p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertCircle size={16} className="text-red-600" />
+          <span className="text-[15px] font-medium text-[#17191c]">Important Notes</span>
+        </div>
+        <ul className="space-y-2 text-[13px] text-[#663333]">
+          <li>✓ Avoid caffeine after 2 PM to maintain sleep quality</li>
+          <li>✓ Eat dinner at least 3 hours before bedtime</li>
+          <li>✓ Space meals 3-4 hours apart for optimal digestion</li>
+          <li>✓ Adjust portions based on workout intensity</li>
+          <li>✓ Stay consistent with meal timing for circadian rhythm</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function HistoryPage({ backendState }: { backendState: AdaptiveHealthState | null }) {
   const backendExperiments = backendState?.memory?.experiments || [];
   const experiments = backendExperiments.length > 0 ? backendExperiments.map((experiment, index) => ({
@@ -1305,6 +2271,7 @@ export default function Dashboard() {
             {activeTab === 'sponsors' && <DataFlowPage backendState={backendState} />}
             {activeTab === 'actions' && <ActionsPage stage={stage} backendState={backendState} />}
             {activeTab === 'metrics' && <MetricsPage stage={stage} backendState={backendState} />}
+            {activeTab === 'diet' && <DietSuggestionPage />}
             {activeTab === 'history' && <HistoryPage backendState={backendState} />}
           </div>
         </div>
