@@ -26,40 +26,94 @@ function Nav() {
 
 function Hero() {
   return (
-    <section style={{ background: "var(--gradient-hero)", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px" }}>
-      <div style={{ textAlign: "center", maxWidth: "900px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", marginBottom: "32px" }}>
+    <section style={{
+      background: "var(--gradient-hero)",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "80px 24px",
+      position: "relative",
+      overflow: "hidden"
+    }}>
+      {/* Animated background glow orbs */}
+      <div style={{
+        position: "absolute",
+        top: "10%",
+        left: "10%",
+        width: "300px",
+        height: "300px",
+        background: "radial-gradient(circle, rgba(107, 98, 242, 0.3) 0%, transparent 70%)",
+        borderRadius: "50%",
+        filter: "blur(60px)",
+        animation: "float 8s ease-in-out infinite"
+      }} />
+      <div style={{
+        position: "absolute",
+        bottom: "15%",
+        right: "10%",
+        width: "400px",
+        height: "400px",
+        background: "radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)",
+        borderRadius: "50%",
+        filter: "blur(80px)",
+        animation: "float 10s ease-in-out infinite reverse"
+      }} />
+
+      <div style={{ textAlign: "center", maxWidth: "900px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "32px", background: "rgba(255, 255, 255, 0.1)", padding: "8px 16px", borderRadius: "9999px", backdropFilter: "blur(10px)", border: "1px solid rgba(255, 255, 255, 0.2)" }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--color-snow-white)", animation: "pulse 2s infinite" }} />
           <span style={{ color: "var(--color-snow-white)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px" }}>
             Autonomous Health Agent
           </span>
         </div>
 
-        <h1 style={{ color: "var(--color-snow-white)", marginBottom: "24px", fontSize: "clamp(48px, 8vw, 72px)", lineHeight: 1, letterSpacing: "-2.52px" }}>
-          Your health. On autopilot.
+        <h1 style={{
+          color: "var(--color-snow-white)",
+          marginBottom: "24px",
+          fontSize: "clamp(48px, 8vw, 80px)",
+          lineHeight: 1,
+          letterSpacing: "-2.52px",
+          fontWeight: 700,
+          textShadow: "0 20px 40px rgba(0,0,0,0.3)"
+        }}>
+          Your health.<br /><span style={{ background: "linear-gradient(90deg, #fff, #e0e7ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>On autopilot.</span>
         </h1>
 
-        <p style={{ color: "var(--color-bone)", maxWidth: "640px", margin: "0 auto 48px", fontSize: "18px", lineHeight: 1.5 }}>
+        <p style={{ color: "var(--color-bone)", maxWidth: "640px", margin: "0 auto 48px", fontSize: "18px", lineHeight: 1.6, opacity: 0.95 }}>
           LifeOS doesn't recommend. It acts. Every morning you wake up to a schedule already optimized for what your body actually did last night.
         </p>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "80px", flexWrap: "wrap" }}>
-          <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-            Launch LifeOS <ArrowRight size={16} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", marginBottom: "80px", flexWrap: "wrap" }}>
+          <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "16px", padding: "14px 32px", boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)" }}>
+            Launch LifeOS <ArrowRight size={18} />
           </Link>
-          <a href="#problem" className="btn-ghost">See how it works</a>
+          <a href="#problem" className="btn-ghost" style={{ fontSize: "16px", padding: "12px 28px" }}>See how it works</a>
         </div>
 
-        <div style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" style={{ opacity: 0.6 }}>
-            <circle cx="80" cy="80" r="75" fill="none" stroke="var(--color-snow-white)" strokeWidth="1.5" strokeOpacity="0.2" />
-            <circle cx="80" cy="80" r="50" fill="none" stroke="var(--color-snow-white)" strokeWidth="1" strokeOpacity="0.15" />
-            <circle cx="80" cy="80" r="2" fill="var(--color-snow-white)" />
+        <div style={{ height: "200px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+          {/* Animated rings */}
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" style={{ position: "absolute" }}>
+            <defs>
+              <style>{`
+                @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes pulse-ring { 0%, 100% { r: 60; opacity: 0.2; } 50% { r: 80; opacity: 0.05; } }
+                .ring-1 { animation: pulse-ring 3s ease-in-out infinite; }
+                .ring-2 { animation: pulse-ring 3s ease-in-out infinite 0.5s; }
+                .ring-3 { animation: pulse-ring 3s ease-in-out infinite 1s; }
+              `}</style>
+            </defs>
+            <circle cx="100" cy="100" r="60" fill="none" stroke="var(--color-dusk-violet)" strokeWidth="2" className="ring-1" />
+            <circle cx="100" cy="100" r="60" fill="none" stroke="var(--color-snow-white)" strokeWidth="1.5" className="ring-2" strokeOpacity="0.4" />
+            <circle cx="100" cy="100" r="60" fill="none" stroke="var(--color-dusk-violet)" strokeWidth="1" className="ring-3" strokeOpacity="0.3" />
+            <circle cx="100" cy="100" r="8" fill="var(--color-dusk-violet)" />
           </svg>
         </div>
       </div>
 
       <div style={{ position: "absolute", bottom: "40px", left: "50%", transform: "translateX(-50%)", animation: "bounce 2s infinite", color: "var(--color-snow-white)" }}>
-        <ChevronDown size={24} />
+        <ChevronDown size={24} strokeWidth={1.5} />
       </div>
     </section>
   );
