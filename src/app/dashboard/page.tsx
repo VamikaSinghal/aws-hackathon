@@ -65,27 +65,27 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#000000]">
+    <div style={{ minHeight: "100vh", background: "var(--color-void-canvas)" }}>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-[#181818] dark:bg-[#212525]/95 backdrop-blur border-b border-[#333333] dark:border-[#1f2a33] h-16 flex items-center px-6">
-        <Link href="/" className="flex items-center gap-2 text-[#8cab87] hover:text-[#ddffdc] transition-colors">
+      <div style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--color-graphite)", backdropFilter: "blur(4px)", borderBottom: "1px solid var(--color-hairline)", height: "64px", display: "flex", alignItems: "center", padding: "0 24px" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--color-ash)", textDecoration: "none", transition: "color 200ms" }}>
           <ArrowLeft size={16} />
-          <span className="text-body-sm font-medium">Back</span>
+          <span style={{ fontSize: "14px", fontWeight: 500 }}>Back</span>
         </Link>
-        <div className="h-4 w-px bg-[#485346]/40 mx-4" />
-        <div className="flex-1 flex items-center gap-2">
-          <div className="w-5 h-5 rounded-sm flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7fee64,#18b759)' }}>
-            <Activity size={10} className="text-black" />
+        <div style={{ height: "16px", width: "1px", background: "var(--color-hairline)", opacity: 0.4, margin: "0 16px" }} />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "20px", height: "20px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-dusk-violet)" }}>
+            <Activity size={10} style={{ color: "var(--color-snow-white)" }} />
           </div>
-          <span className="font-display text-[#ddffdc] text-sm font-medium">LifeOS</span>
-          <span className="text-caption text-[#677d64]">/ Agent Dashboard</span>
+          <span style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500 }}>LifeOS</span>
+          <span style={{ color: "var(--color-slate)", fontSize: "13px" }}>/ Agent Dashboard</span>
         </div>
 
         {/* Header controls */}
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${running ? 'bg-[#7fee64] animate-pulse' : 'bg-[#677d64]'}`} />
-            <span className="text-caption text-[#8cab87]">
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: running ? "var(--color-dusk-violet)" : "var(--color-slate)", animation: running ? "pulse 2s infinite" : "none" }} />
+            <span style={{ fontSize: "13px", color: "var(--color-ash)" }}>
               {running ? 'Processing' : 'Ready'} • Loop #{currentLoop.loopNumber}
             </span>
           </div>
@@ -93,7 +93,8 @@ export default function DashboardPage() {
           <button
             onClick={handleStartLoop}
             disabled={running}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pills bg-[#7fee64] text-black text-caption font-medium hover:bg-[#9fff80] transition-colors disabled:opacity-50"
+            className="btn-primary"
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", opacity: running ? 0.5 : 1 }}
           >
             <Play size={12} />
             Start
@@ -101,7 +102,7 @@ export default function DashboardPage() {
 
           <button
             onClick={handleReset}
-            className="w-8 h-8 rounded-cards border border-[#485346]/40 flex items-center justify-center text-[#677d64] hover:text-[#9cbf93]"
+            style={{ width: "32px", height: "32px", borderRadius: "10px", border: "1px solid var(--color-hairline)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-slate)", background: "transparent", cursor: "pointer", transition: "all 200ms" }}
             title="Reset"
           >
             <RotateCcw size={14} />
@@ -111,46 +112,50 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex">
+      <div style={{ display: "flex" }}>
         {/* Sidebar */}
-        <div className="w-64 border-r border-[#333333] dark:border-[#485346]/40 bg-[#f5f5f5] dark:bg-[#181818] min-h-screen">
-          <div className="p-6 space-y-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-start gap-3 px-4 py-3 rounded-cards transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[#7fee64]/10 border border-[#7fee64]/30'
-                    : 'border border-transparent hover:bg-[#212525]'
-                }`}
-              >
-                <div className={activeTab === item.id ? 'text-[#7fee64]' : 'text-[#677d64]'}>
-                  {item.icon}
-                </div>
-                <div className="text-left">
-                  <p className={`text-body-sm font-medium ${activeTab === item.id ? 'text-[#7fee64]' : 'text-[#ddffdc]'}`}>
-                    {item.label}
-                  </p>
-                  <p className="text-caption text-[#677d64]">{item.desc}</p>
-                </div>
-                {activeTab === item.id && <ChevronRight size={14} className="ml-auto text-[#7fee64]" />}
-              </button>
-            ))}
-          </div>
+        <div style={{ width: "256px", borderRight: "1px solid var(--color-hairline)", background: "var(--color-graphite)", minHeight: "100vh", padding: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                padding: "12px",
+                borderRadius: "10px",
+                border: activeTab === item.id ? "1px solid var(--color-dusk-violet)" : "1px solid transparent",
+                background: activeTab === item.id ? "rgba(107, 98, 242, 0.08)" : "transparent",
+                cursor: "pointer",
+                transition: "all 200ms",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ color: activeTab === item.id ? "var(--color-dusk-violet)" : "var(--color-slate)" }}>
+                {item.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: activeTab === item.id ? "var(--color-dusk-violet)" : "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: "0 0 2px 0" }}>
+                  {item.label}
+                </p>
+                <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>{item.desc}</p>
+              </div>
+              {activeTab === item.id && <ChevronRight size={14} style={{ color: "var(--color-dusk-violet)" }} />}
+            </button>
+          ))}
         </div>
 
         {/* Main Content */}
-        <div className="flex-1">
-          <div className="max-w-6xl mx-auto px-8 py-8">
-            {activeTab === 'sources' && <DataSourcesPage />}
-            {activeTab === 'overview' && <LoopOverview loop={currentLoop} state={state} stage={stage} />}
-            {activeTab === 'agents' && <AgentReasoningPage loop={currentLoop} stage={stage} />}
-            {activeTab === 'sponsors' && <SponsorFlowPage loop={currentLoop} stage={stage} />}
-            {activeTab === 'actions' && <ActionsPipelinePage loop={currentLoop} />}
-            {activeTab === 'metrics' && <HealthMetricsPage loop={currentLoop} />}
-            {activeTab === 'history' && <StrategyHistoryPage state={state} />}
-          </div>
+        <div style={{ flex: 1, maxWidth: "1200px", margin: "0 auto", padding: "32px 24px", width: "100%" }}>
+          {activeTab === 'sources' && <DataSourcesPage />}
+          {activeTab === 'overview' && <LoopOverview loop={currentLoop} state={state} stage={stage} />}
+          {activeTab === 'agents' && <AgentReasoningPage loop={currentLoop} stage={stage} />}
+          {activeTab === 'sponsors' && <SponsorFlowPage loop={currentLoop} stage={stage} />}
+          {activeTab === 'actions' && <ActionsPipelinePage loop={currentLoop} />}
+          {activeTab === 'metrics' && <HealthMetricsPage loop={currentLoop} />}
+          {activeTab === 'history' && <StrategyHistoryPage state={state} />}
         </div>
       </div>
     </div>
@@ -163,15 +168,15 @@ function LoopOverview({ loop, state, stage }: any) {
   const currentStageIndex = stages.indexOf(stage);
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Current Loop Progress</h1>
-        <p className="text-body text-[#8cab87]">Loop #{loop.loopNumber} • Observing agent workflow with sponsor coordination</p>
+        <h2 style={{ marginBottom: "8px" }}>Current Loop Progress</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>Loop #{loop.loopNumber} • Observing agent workflow with sponsor coordination</p>
       </div>
 
       {/* Progress indicator */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <div className="space-y-6">
+      <div className="card" style={{ padding: "32px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {stages.map((s, idx) => {
             const isCompleted = idx < currentStageIndex;
             const isCurrent = idx === currentStageIndex;
@@ -179,57 +184,66 @@ function LoopOverview({ loop, state, stage }: any) {
             const sponsor = Array.isArray(stageInfo.sponsor) ? stageInfo.sponsor.join(', ') : stageInfo.sponsor;
 
             return (
-              <div key={s} className="flex gap-4 items-start">
-                <div className="flex flex-col items-center">
+              <div key={s} style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   <div
-                    className={`w-10 h-10 rounded-cards border-2 flex items-center justify-center font-medium ${
-                      isCurrent
-                        ? 'bg-[#7fee64]/20 border-[#7fee64]'
-                        : isCompleted
-                          ? 'bg-[#7fee64]/10 border-[#7fee64]'
-                          : 'bg-[#212525] border-[#485346]'
-                    }`}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "10px",
+                      border: "2px solid",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 500,
+                      borderColor: isCurrent || isCompleted ? "var(--color-dusk-violet)" : "var(--color-hairline)",
+                      background: isCurrent ? "rgba(107, 98, 242, 0.1)" : isCompleted ? "rgba(107, 98, 242, 0.05)" : "var(--color-void-canvas)",
+                    }}
                   >
-                    <span
-                      className={isCurrent || isCompleted ? 'text-[#7fee64]' : 'text-[#677d64]'}
-                    >
+                    <span style={{ color: isCurrent || isCompleted ? "var(--color-dusk-violet)" : "var(--color-slate)" }}>
                       {idx + 1}
                     </span>
                   </div>
                   {idx < stages.length - 1 && (
                     <div
-                      className="w-0.5 h-12 my-1"
-                      style={{ backgroundColor: isCompleted ? '#7fee64' : '#485346' }}
+                      style={{
+                        width: "2px",
+                        height: "48px",
+                        margin: "4px 0",
+                        background: isCompleted ? "var(--color-dusk-violet)" : "var(--color-hairline)",
+                      }}
                     />
                   )}
                 </div>
 
-                <div className="flex-1 pt-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-body-sm font-medium text-[#ddffdc]">{s}</h3>
-                    <span className={`text-caption px-2 py-1 rounded-pills ${
-                      isCurrent ? 'bg-[#7fee64]/10 text-[#7fee64]' :
-                      isCompleted ? 'bg-[#7fee64]/10 text-[#7fee64]' :
-                      'bg-[#212525] text-[#677d64]'
-                    }`}>
+                <div style={{ flex: 1, paddingTop: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <h3 style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: 0 }}>{s}</h3>
+                    <span style={{
+                      fontSize: "12px",
+                      padding: "4px 12px",
+                      borderRadius: "9999px",
+                      background: isCurrent || isCompleted ? "rgba(107, 98, 242, 0.1)" : "var(--color-graphite)",
+                      color: isCurrent || isCompleted ? "var(--color-dusk-violet)" : "var(--color-slate)"
+                    }}>
                       {stageInfo.status}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <p className="text-caption text-[#8cab87]">
-                      <span className="text-[#677d64]">Sponsor:</span> {sponsor}
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <p style={{ fontSize: "12px", color: "var(--color-ash)", margin: 0 }}>
+                      <span style={{ color: "var(--color-slate)" }}>Sponsor:</span> {sponsor}
                     </p>
                     {isCurrent && (
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 rounded-full bg-[#7fee64] animate-pulse" />
-                        <span className="text-caption text-[#7fee64]">Active</span>
+                      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-dusk-violet)", animation: "pulse 2s infinite" }} />
+                        <span style={{ fontSize: "12px", color: "var(--color-dusk-violet)" }}>Active</span>
                       </div>
                     )}
                   </div>
 
                   {isCurrent && (
-                    <p className="text-caption text-[#677d64] mt-2">
+                    <p style={{ fontSize: "12px", color: "var(--color-slate)", marginTop: "8px", margin: 0 }}>
                       Processing: {Math.round((Date.now() - stageInfo.startedAt) / 100) / 10}s elapsed
                     </p>
                   )}
@@ -241,23 +255,18 @@ function LoopOverview({ loop, state, stage }: any) {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Actions Proposed</p>
-          <p className="text-heading-sm text-[#7fee64]">{loop.proposedActions.length}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Actions Approved</p>
-          <p className="text-heading-sm text-[#7fee64]">{loop.approvedActions.length}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Actions Executed</p>
-          <p className="text-heading-sm text-[#7fee64]">{loop.executedActions.length}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Agent Messages</p>
-          <p className="text-heading-sm text-[#7fee64]">{loop.agentMessages.length}</p>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+        {[
+          { label: "Actions Proposed", value: loop.proposedActions.length },
+          { label: "Actions Approved", value: loop.approvedActions.length },
+          { label: "Actions Executed", value: loop.executedActions.length },
+          { label: "Agent Messages", value: loop.agentMessages.length },
+        ].map((stat, i) => (
+          <div key={i} className="card" style={{ padding: "16px" }}>
+            <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: "0 0 8px 0" }}>{stat.label}</p>
+            <p style={{ color: "var(--color-dusk-violet)", fontSize: "24px", fontWeight: 600, margin: 0 }}>{stat.value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -266,21 +275,21 @@ function LoopOverview({ loop, state, stage }: any) {
 /* ── AGENT REASONING PAGE ────────────────────── */
 function AgentReasoningPage({ loop, stage }: any) {
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Agent Reasoning Process</h1>
-        <p className="text-body text-[#8cab87]">Watch how Planner, Critic, and Experts debate and reach consensus</p>
+        <h2 style={{ marginBottom: "8px" }}>Agent Reasoning Process</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>Watch how Planner, Critic, and Experts debate and reach consensus</p>
       </div>
 
       {/* Main reasoning timeline */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Multi-Agent Debate</p>
+      <div className="card" style={{ padding: "32px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Multi-Agent Debate</p>
         <AgentReasoningTimeline reasoning={loop.reasoning} />
       </div>
 
       {/* Agent messages */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Agent Thoughts ({loop.agentMessages.length})</p>
+      <div className="card" style={{ padding: "32px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Agent Thoughts ({loop.agentMessages.length})</p>
         <ReasoningLog
           agentMessages={loop.agentMessages}
           sponsorMessages={[]}
@@ -289,10 +298,10 @@ function AgentReasoningPage({ loop, stage }: any) {
       </div>
 
       {/* Current stage focus */}
-      <div className="bg-[#212525]/50 rounded-cards border border-[#485346]/40 p-6">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-3">Current Stage</p>
-        <p className="text-body text-[#ddffdc] font-medium">{stage}</p>
-        <p className="text-caption text-[#8cab87] mt-2">
+      <div className="card" style={{ padding: "24px", background: "rgba(107, 98, 242, 0.05)" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 12px 0" }}>Current Stage</p>
+        <p style={{ color: "var(--color-bone)", fontSize: "16px", fontWeight: 500, margin: "0 0 8px 0" }}>{stage}</p>
+        <p style={{ color: "var(--color-ash)", fontSize: "13px", margin: 0 }}>
           {stage === 'Diagnose' && 'Agents analyzing health metrics and identifying patterns...'}
           {stage === 'Plan' && 'Multi-agent debate on proposed actions and refinements...'}
           {stage === 'Act' && 'Approved actions being authorized and executed...'}
@@ -308,21 +317,21 @@ function AgentReasoningPage({ loop, stage }: any) {
 /* ── SPONSOR FLOW PAGE ─────────────────────── */
 function SponsorFlowPage({ loop, stage }: any) {
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Sponsor Coordination</h1>
-        <p className="text-body text-[#8cab87]">Data flowing between Nexla, AWS, Zero.xyz, Pomerium, and Akash</p>
+        <h2 style={{ marginBottom: "8px" }}>Sponsor Coordination</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>Data flowing between Nexla, AWS, Zero.xyz, Pomerium, and Akash</p>
       </div>
 
       {/* Data flow visualization */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Live Data Flow</p>
+      <div className="card" style={{ padding: "32px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Live Data Flow</p>
         <OrchestrationDataFlow stage={stage} />
       </div>
 
       {/* Sponsor messages log */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Sponsor Messages ({loop.sponsorMessages.length})</p>
+      <div className="card" style={{ padding: "32px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Sponsor Messages ({loop.sponsorMessages.length})</p>
         <ReasoningLog
           agentMessages={[]}
           sponsorMessages={loop.sponsorMessages}
@@ -332,12 +341,12 @@ function SponsorFlowPage({ loop, stage }: any) {
       </div>
 
       {/* Sponsor status */}
-      <div className="grid grid-cols-5 gap-4">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px" }}>
         {['Nexla', 'Zero.xyz', 'AWS', 'Pomerium', 'Akash'].map((sponsor) => (
-          <div key={sponsor} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4 text-center">
-            <p className="text-body-sm font-medium text-[#ddffdc] mb-2">{sponsor}</p>
-            <div className="w-2 h-2 rounded-full bg-[#7fee64] mx-auto mb-2" />
-            <p className="text-caption text-[#8cab87]">Online</p>
+          <div key={sponsor} className="card" style={{ padding: "16px", textAlign: "center" }}>
+            <p style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: "0 0 8px 0" }}>{sponsor}</p>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-dusk-violet)", margin: "0 auto 8px" }} />
+            <p style={{ color: "var(--color-ash)", fontSize: "12px", margin: 0 }}>Online</p>
           </div>
         ))}
       </div>
@@ -348,47 +357,49 @@ function SponsorFlowPage({ loop, stage }: any) {
 /* ── ACTIONS PIPELINE PAGE ──────────────────── */
 function ActionsPipelinePage({ loop }: any) {
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Actions Pipeline</h1>
-        <p className="text-body text-[#8cab87]">From proposal through authorization to execution</p>
+        <h2 style={{ marginBottom: "8px" }}>Actions Pipeline</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>From proposal through authorization to execution</p>
       </div>
 
       {/* Pipeline stages */}
-      <div className="space-y-6">
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         {['Proposed', 'Approved', 'Executed'].map((stage, idx) => {
           const actions = stage === 'Proposed' ? loop.proposedActions :
                          stage === 'Approved' ? loop.approvedActions :
                          loop.executedActions;
 
           return (
-            <div key={stage} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-cards bg-[#212525] border border-[#485346]/40 flex items-center justify-center text-sm font-medium text-[#7fee64]">
+            <div key={stage} className="card" style={{ padding: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "var(--color-graphite)", border: "1px solid var(--color-hairline)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 500, color: "var(--color-dusk-violet)" }}>
                   {idx + 1}
                 </div>
-                <h3 className="text-body-sm font-medium text-[#ddffdc]">{stage} Actions</h3>
-                <span className="text-caption text-[#8cab87]">({actions.length})</span>
+                <h3 style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: 0 }}>{stage} Actions</h3>
+                <span style={{ color: "var(--color-ash)", fontSize: "13px" }}>({actions.length})</span>
               </div>
 
-              <div className="space-y-2">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {actions.length === 0 ? (
-                  <p className="text-caption text-[#677d64]">No actions in this stage</p>
+                  <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>No actions in this stage</p>
                 ) : (
                   actions.map((action: any) => (
-                    <div key={action.id} className="flex gap-3 p-3 bg-[#212525]/50 rounded-cards border border-[#485346]/20">
-                      <div className="flex-1">
-                        <p className="text-body-sm text-[#ddffdc] font-medium">{action.action}</p>
-                        <p className="text-caption text-[#8cab87]">{action.rationale}</p>
-                        <div className="flex gap-2 mt-2">
-                          <span className={`text-caption px-2 py-0.5 rounded-pills ${
-                            action.urgency === 'high' ? 'bg-[#aed2a4]/10 text-[#aed2a4]' :
-                            action.urgency === 'medium' ? 'bg-[#9cbf93]/10 text-[#9cbf93]' :
-                            'bg-[#485346]/20 text-[#677d64]'
-                          }`}>
+                    <div key={action.id} className="card" style={{ padding: "12px", background: "rgba(212, 212, 212, 0.03)" }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: "var(--color-bone)", fontSize: "13px", fontWeight: 500, margin: 0 }}>{action.action}</p>
+                        <p style={{ color: "var(--color-ash)", fontSize: "12px", margin: "4px 0 8px 0" }}>{action.rationale}</p>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <span style={{
+                            fontSize: "12px",
+                            padding: "2px 8px",
+                            borderRadius: "9999px",
+                            background: "rgba(107, 98, 242, 0.08)",
+                            color: "var(--color-dusk-violet)"
+                          }}>
                             {action.urgency} urgency
                           </span>
-                          <span className="text-caption text-[#677d64]">via {action.executor}</span>
+                          <span style={{ fontSize: "12px", color: "var(--color-slate)" }}>via {action.executor}</span>
                         </div>
                       </div>
                     </div>
@@ -406,13 +417,13 @@ function ActionsPipelinePage({ loop }: any) {
 /* ── HEALTH METRICS PAGE ────────────────────── */
 function HealthMetricsPage({ loop }: any) {
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Health Metrics</h1>
-        <p className="text-body text-[#8cab87]">Before and after impact of executed actions</p>
+        <h2 style={{ marginBottom: "8px" }}>Health Metrics</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>Before and after impact of executed actions</p>
       </div>
 
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
+      <div className="card" style={{ padding: "32px" }}>
         <RealTimeMetrics
           current={loop.healthMetrics}
           previous={loop.previousMetrics}
@@ -421,14 +432,14 @@ function HealthMetricsPage({ loop }: any) {
 
       {/* Improvement summary */}
       {loop.outcome && (
-        <div className="bg-[#181818] rounded-cards border border-[#7fee64]/30 p-6">
-          <p className="text-caption text-[#7fee64] uppercase tracking-[0.6px] font-medium mb-3">Loop Outcome</p>
-          <p className="text-body-sm text-[#8cab87] mb-4">{loop.outcome.summary}</p>
-          <div className="space-y-2">
+        <div className="card" style={{ padding: "24px", background: "rgba(107, 98, 242, 0.06)", borderColor: "rgba(107, 98, 242, 0.2)" }}>
+          <p style={{ color: "var(--color-dusk-violet)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 12px 0" }}>Loop Outcome</p>
+          <p style={{ color: "var(--color-ash)", fontSize: "14px", margin: "0 0 16px 0" }}>{loop.outcome.summary}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {Object.entries(loop.outcome.metricsImprovement).map(([key, value]: any) => (
-              <div key={key} className="flex justify-between text-caption text-[#677d64]">
-                <span className="capitalize">{key}</span>
-                <span className="text-[#7fee64]">Improved ✓</span>
+              <div key={key} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--color-slate)" }}>
+                <span style={{ textTransform: "capitalize" }}>{key}</span>
+                <span style={{ color: "var(--color-dusk-violet)" }}>Improved ✓</span>
               </div>
             ))}
           </div>
@@ -441,45 +452,40 @@ function HealthMetricsPage({ loop }: any) {
 /* ── STRATEGY HISTORY PAGE ─────────────────── */
 function StrategyHistoryPage({ state }: any) {
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Strategy History</h1>
-        <p className="text-body text-[#8cab87]">Past loops and learning outcomes</p>
+        <h2 style={{ marginBottom: "8px" }}>Strategy History</h2>
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>Past loops and learning outcomes</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Total Loops</p>
-          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalLoops}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Actions Proposed</p>
-          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalActionsProposed}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Actions Approved</p>
-          <p className="text-heading-sm text-[#7fee64]">{state.stats.totalActionsApproved}</p>
-        </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-4">
-          <p className="text-caption text-[#677d64] mb-2">Avg Improvement</p>
-          <p className="text-heading-sm text-[#7fee64]">+{state.stats.averageRecoveryImprovement}%</p>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+        {[
+          { label: "Total Loops", value: state.stats.totalLoops },
+          { label: "Actions Proposed", value: state.stats.totalActionsProposed },
+          { label: "Actions Approved", value: state.stats.totalActionsApproved },
+          { label: "Avg Improvement", value: `+${state.stats.averageRecoveryImprovement}%` },
+        ].map((stat, i) => (
+          <div key={i} className="card" style={{ padding: "16px" }}>
+            <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: "0 0 8px 0" }}>{stat.label}</p>
+            <p style={{ color: "var(--color-dusk-violet)", fontSize: "24px", fontWeight: 600, margin: 0 }}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Previous loops */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Recent Loops</p>
-        <div className="space-y-3">
+      <div className="card" style={{ padding: "24px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Recent Loops</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {state.previousLoops.slice(0, 5).map((loop: any, idx: number) => (
-            <div key={loop.id} className="flex items-center justify-between p-3 bg-[#212525]/50 rounded-cards border border-[#485346]/20">
+            <div key={loop.id} className="card" style={{ padding: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(212, 212, 212, 0.03)" }}>
               <div>
-                <p className="text-body-sm text-[#ddffdc] font-medium">Loop #{loop.loopNumber}</p>
-                <p className="text-caption text-[#677d64]">{loop.outcome?.summary || 'Processing...'}</p>
+                <p style={{ color: "var(--color-bone)", fontSize: "13px", fontWeight: 500, margin: 0 }}>Loop #{loop.loopNumber}</p>
+                <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>{loop.outcome?.summary || 'Processing...'}</p>
               </div>
-              <div className="text-right">
-                <p className="text-body-sm font-medium text-[#8cab87]">{loop.outcome?.metricsImprovement?.recovery?.score ? `Recovery ${loop.outcome.metricsImprovement.recovery.score}%` : '—'}</p>
-                <p className="text-caption text-[#677d64]">{loop.executedActions.length} actions executed</p>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "var(--color-ash)", fontSize: "13px", fontWeight: 500, margin: 0 }}>{loop.outcome?.metricsImprovement?.recovery?.score ? `Recovery ${loop.outcome.metricsImprovement.recovery.score}%` : '—'}</p>
+                <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>{loop.executedActions.length} actions executed</p>
               </div>
             </div>
           ))}
@@ -578,15 +584,15 @@ function DataSourcesPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
         <div>
-          <h1 className="text-heading-lg text-[#ddffdc] font-medium mb-2">Data Sources</h1>
-          <p className="text-body text-[#8cab87]">Loading Nexla data...</p>
+          <h2 style={{ marginBottom: "8px" }}>Data Sources</h2>
+          <p style={{ color: "var(--color-ash)", margin: 0 }}>Loading Nexla data...</p>
         </div>
-        <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8 text-center">
-          <div className="inline-flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#7fee64] animate-pulse" />
-            <span className="text-[#8cab87]">Connecting to Nexla...</span>
+        <div className="card" style={{ padding: "32px", textAlign: "center" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-dusk-violet)", animation: "pulse 2s infinite" }} />
+            <span style={{ color: "var(--color-ash)" }}>Connecting to Nexla...</span>
           </div>
         </div>
       </div>
@@ -594,20 +600,29 @@ function DataSourcesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-heading-lg text-[#ddffdc] font-medium">Data Sources</h1>
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-pills ${
-            connectionMode === 'live' ? 'bg-[#7fee64]/10' : 'bg-[#9cbf93]/10'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${connectionMode === 'live' ? 'bg-[#7fee64]' : 'bg-[#9cbf93]'}`} />
-            <span className={`text-caption font-medium ${connectionMode === 'live' ? 'text-[#7fee64]' : 'text-[#9cbf93]'}`}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+          <h2 style={{ margin: 0 }}>Data Sources</h2>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 12px",
+            borderRadius: "9999px",
+            background: connectionMode === 'live' ? "rgba(107, 98, 242, 0.1)" : "rgba(155, 145, 255, 0.1)"
+          }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: connectionMode === 'live' ? "var(--color-dusk-violet)" : "var(--color-slate)" }} />
+            <span style={{
+              fontSize: "12px",
+              fontWeight: 500,
+              color: connectionMode === 'live' ? "var(--color-dusk-violet)" : "var(--color-ash)"
+            }}>
               {connectionMode === 'live' ? '🔴 Live Nexla' : '⚪ Mock Data'}
             </span>
           </div>
         </div>
-        <p className="text-body text-[#8cab87]">
+        <p style={{ color: "var(--color-ash)", margin: 0 }}>
           {connectionMode === 'live'
             ? 'Connected to real Nexla API - receiving live health data from all sources'
             : 'Using mock data - configure Nexla API for real data'}
@@ -615,16 +630,16 @@ function DataSourcesPage() {
       </div>
 
       {/* Data flow diagram */}
-      <div className="bg-[#181818] rounded-cards border border-[#485346]/40 p-8">
-        <p className="text-caption text-[#677d64] uppercase tracking-[0.6px] font-medium mb-6">Complete Data Flow</p>
+      <div className="card" style={{ padding: "32px" }}>
+        <p style={{ color: "var(--color-slate)", fontSize: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 24px 0" }}>Complete Data Flow</p>
 
-        <div className="flex items-center justify-between mb-8 px-4">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", padding: "0 16px" }}>
           {/* Sources */}
-          <div className="flex flex-col gap-2">
-            <div className="text-caption text-[#677d64] font-medium uppercase">Sources</div>
-            <div className="flex gap-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ fontSize: "12px", color: "var(--color-slate)", fontWeight: 500, textTransform: "uppercase" }}>Sources</div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {['Whoop', 'Apple', 'Oura', 'Calendar', 'Gmail'].map((s) => (
-                <div key={s} className="px-3 py-2 bg-[#212525] rounded-pills text-caption text-[#8cab87] border border-[#485346]/40">
+                <div key={s} style={{ padding: "6px 12px", background: "var(--color-graphite)", borderRadius: "9999px", fontSize: "12px", color: "var(--color-ash)", border: "1px solid var(--color-hairline)" }}>
                   {s}
                 </div>
               ))}
@@ -632,86 +647,92 @@ function DataSourcesPage() {
           </div>
 
           {/* Arrow */}
-          <div className="flex-1 flex items-center justify-center px-8">
-            <div className="flex-1 h-0.5 bg-gradient-to-r from-[#7fee64] to-transparent" />
-            <div className="text-caption text-[#8cab87] px-4 whitespace-nowrap">Real-time sync</div>
-            <div className="flex-1 h-0.5 bg-gradient-to-l from-[#7fee64] to-transparent" />
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px" }}>
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(to right, var(--color-dusk-violet), transparent)` }} />
+            <div style={{ fontSize: "12px", color: "var(--color-ash)", padding: "0 16px", whiteSpace: "nowrap" }}>Real-time sync</div>
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(to left, var(--color-dusk-violet), transparent)` }} />
           </div>
 
           {/* Nexla */}
-          <div className="flex flex-col gap-2">
-            <div className="text-caption text-[#677d64] font-medium uppercase">Aggregation</div>
-            <div className="px-4 py-2 bg-[#7fee64]/10 rounded-pills text-body-sm text-[#7fee64] border border-[#7fee64]/30 font-medium">
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ fontSize: "12px", color: "var(--color-slate)", fontWeight: 500, textTransform: "uppercase" }}>Aggregation</div>
+            <div style={{ padding: "6px 16px", background: "rgba(107, 98, 242, 0.1)", borderRadius: "9999px", fontSize: "14px", color: "var(--color-dusk-violet)", border: "1px solid rgba(107, 98, 242, 0.3)", fontWeight: 500 }}>
               Nexla Data Hub
             </div>
           </div>
 
           {/* Arrow */}
-          <div className="flex-1 flex items-center justify-center px-8">
-            <div className="flex-1 h-0.5 bg-gradient-to-r from-[#9cbf93] to-transparent" />
-            <div className="text-caption text-[#8cab87] px-4 whitespace-nowrap">Unified context</div>
-            <div className="flex-1 h-0.5 bg-gradient-to-l from-[#9cbf93] to-transparent" />
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px" }}>
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(to right, var(--color-dusk-violet), transparent)` }} />
+            <div style={{ fontSize: "12px", color: "var(--color-ash)", padding: "0 16px", whiteSpace: "nowrap" }}>Unified context</div>
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(to left, var(--color-dusk-violet), transparent)` }} />
           </div>
 
           {/* AWS/Orchestration */}
-          <div className="flex flex-col gap-2">
-            <div className="text-caption text-[#677d64] font-medium uppercase">Processing</div>
-            <div className="px-4 py-2 bg-[#9cbf93]/10 rounded-pills text-body-sm text-[#9cbf93] border border-[#9cbf93]/30 font-medium">
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ fontSize: "12px", color: "var(--color-slate)", fontWeight: 500, textTransform: "uppercase" }}>Processing</div>
+            <div style={{ padding: "6px 16px", background: "rgba(107, 98, 242, 0.1)", borderRadius: "9999px", fontSize: "14px", color: "var(--color-dusk-violet)", border: "1px solid rgba(107, 98, 242, 0.3)", fontWeight: 500 }}>
               AWS + Agents
             </div>
           </div>
         </div>
 
         {/* Description */}
-        <div className="bg-[#212525]/50 rounded-cards p-4 text-caption text-[#8cab87]">
-          <p>
-            <span className="text-[#7fee64] font-medium">1. Collect:</span> All health data sources sync simultaneously to Nexla.
+        <div style={{ background: "rgba(107, 98, 242, 0.05)", borderRadius: "24px", padding: "16px", fontSize: "12px", color: "var(--color-ash)" }}>
+          <p style={{ margin: 0 }}>
+            <span style={{ color: "var(--color-dusk-violet)", fontWeight: 500 }}>1. Collect:</span> All health data sources sync simultaneously to Nexla.
             <br/>
-            <span className="text-[#7fee64] font-medium">2. Unify:</span> Nexla normalizes and combines data into a single health context.
+            <span style={{ color: "var(--color-dusk-violet)", fontWeight: 500 }}>2. Unify:</span> Nexla normalizes and combines data into a single health context.
             <br/>
-            <span className="text-[#7fee64] font-medium">3. Process:</span> AWS Bedrock + Zero.xyz agents analyze patterns and recommend actions.
+            <span style={{ color: "var(--color-dusk-violet)", fontWeight: 500 }}>3. Process:</span> AWS Bedrock + Zero.xyz agents analyze patterns and recommend actions.
             <br/>
-            <span className="text-[#7fee64] font-medium">4. Execute:</span> Pomerium authorizes and applies changes (calendar, notifications, etc.)
+            <span style={{ color: "var(--color-dusk-violet)", fontWeight: 500 }}>4. Execute:</span> Pomerium authorizes and applies changes (calendar, notifications, etc.)
           </p>
         </div>
       </div>
 
       {/* Connected sources */}
-      <div className="space-y-4">
-        <h3 className="text-body-sm font-medium text-[#ddffdc]">Connected Sources</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <h3 style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: 0 }}>Connected Sources</h3>
 
         {dataSources.map((source: any) => (
-          <div key={source.name} className="bg-[#181818] rounded-cards border border-[#485346]/40 p-6 hover:border-[#485346] transition-all">
-            <div className="flex gap-4 mb-4">
+          <div key={source.name} className="card" style={{ padding: "24px" }}>
+            <div style={{ display: "flex", gap: "16px", marginBottom: "16px" }}>
               {/* Icon and name */}
-              <div className="flex items-center gap-3">
-                <div className="text-4xl">{source.icon}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ fontSize: "32px" }}>{source.icon}</div>
                 <div>
-                  <p className="text-body-sm font-medium text-[#ddffdc]">{source.name}</p>
-                  <p className="text-caption text-[#677d64]">{source.category}</p>
+                  <p style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: 0 }}>{source.name}</p>
+                  <p style={{ color: "var(--color-slate)", fontSize: "12px", margin: 0 }}>{source.category}</p>
                 </div>
               </div>
 
               {/* Status */}
-              <div className="ml-auto">
-                <div className="flex items-center gap-2 px-3 py-1 bg-[#7fee64]/10 rounded-pills">
-                  <div className="w-2 h-2 rounded-full bg-[#7fee64]" />
-                  <span className="text-caption text-[#7fee64] font-medium">Connected</span>
+              <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 12px", background: "rgba(107, 98, 242, 0.1)", borderRadius: "9999px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-dusk-violet)" }} />
+                  <span style={{ fontSize: "12px", color: "var(--color-dusk-violet)", fontWeight: 500 }}>Connected</span>
                 </div>
-                <p className="text-caption text-[#677d64] text-right mt-2">Last sync: {source.lastSync}</p>
+                <p style={{ fontSize: "12px", color: "var(--color-slate)", marginTop: "8px", margin: 0 }}>Last sync: {source.lastSync}</p>
               </div>
             </div>
 
             {/* Description */}
-            <p className="text-body-sm text-[#8cab87] mb-4">{source.description}</p>
+            <p style={{ color: "var(--color-ash)", fontSize: "13px", marginBottom: "12px", margin: 0 }}>{source.description}</p>
 
             {/* Data points */}
-            <div className="flex flex-wrap gap-2">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
               {source.dataPoints.map((point: string) => (
                 <span
                   key={point}
-                  className="text-caption px-2 py-1 rounded-pills bg-[#212525] border"
-                  style={{ borderColor: `${source.color}40`, color: source.color }}
+                  style={{
+                    fontSize: "12px",
+                    padding: "4px 8px",
+                    borderRadius: "9999px",
+                    background: "var(--color-graphite)",
+                    border: "1px solid var(--color-hairline)",
+                    color: "var(--color-ash)"
+                  }}
                 >
                   {point}
                 </span>
@@ -719,37 +740,32 @@ function DataSourcesPage() {
             </div>
 
             {/* Data flow indicator */}
-            <div className="mt-4 pt-4 border-t border-[#485346]/20 flex items-center gap-2">
-              <div className="text-caption text-[#677d64]">Flowing to:</div>
-              <div className="text-caption text-[#7fee64] font-medium">Nexla</div>
-              <div className="flex-1 h-0.5 bg-gradient-to-r from-[#7fee64]/50 to-transparent" />
-              <div className="text-caption text-[#9cbf93] font-medium">Agents</div>
+            <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid var(--color-hairline)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ fontSize: "12px", color: "var(--color-slate)" }}>Flowing to:</div>
+              <div style={{ fontSize: "12px", color: "var(--color-dusk-violet)", fontWeight: 500 }}>Nexla</div>
+              <div style={{ flex: 1, height: "1px", background: `linear-gradient(to right, var(--color-dusk-violet), transparent)` }} />
+              <div style={{ fontSize: "12px", color: "var(--color-dusk-violet)", fontWeight: 500 }}>Agents</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* How it works */}
-      <div className="bg-[#212525]/50 rounded-cards border border-[#485346]/40 p-6 space-y-4">
-        <h3 className="text-body-sm font-medium text-[#ddffdc]">How LifeOS Uses Your Data</h3>
+      <div className="card" style={{ padding: "24px", background: "rgba(107, 98, 242, 0.05)" }}>
+        <h3 style={{ color: "var(--color-bone)", fontSize: "14px", fontWeight: 500, margin: "0 0 16px 0" }}>How LifeOS Uses Your Data</h3>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <p className="text-caption text-[#677d64] font-medium">🔄 Continuous Sync</p>
-            <p className="text-caption text-[#8cab87]">Data sources update every 1-5 minutes, providing real-time health context</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-caption text-[#677d64] font-medium">🧠 AI Analysis</p>
-            <p className="text-caption text-[#8cab87]">Agents analyze patterns: Is recovery low? Are you overbooked? Is sleep poor?</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-caption text-[#677d64] font-medium">✅ Smart Actions</p>
-            <p className="text-caption text-[#8cab87]">Move workouts, block screens, adjust plans—all authorized before execution</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-caption text-[#677d64] font-medium">📊 Outcomes Tracked</p>
-            <p className="text-caption text-[#8cab87]">Compare metrics before/after. Learn what works. Refine strategies daily</p>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+          {[
+            { emoji: "🔄", title: "Continuous Sync", desc: "Data sources update every 1-5 minutes, providing real-time health context" },
+            { emoji: "🧠", title: "AI Analysis", desc: "Agents analyze patterns: Is recovery low? Are you overbooked? Is sleep poor?" },
+            { emoji: "✅", title: "Smart Actions", desc: "Move workouts, block screens, adjust plans—all authorized before execution" },
+            { emoji: "📊", title: "Outcomes Tracked", desc: "Compare metrics before/after. Learn what works. Refine strategies daily" },
+          ].map((item, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <p style={{ fontSize: "12px", color: "var(--color-slate)", fontWeight: 500, margin: 0 }}>{item.emoji} {item.title}</p>
+              <p style={{ fontSize: "12px", color: "var(--color-ash)", margin: 0 }}>{item.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
