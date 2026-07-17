@@ -1,0 +1,33 @@
+version: "2.0"
+services:
+  adaptive-health:
+    image: vamikasinghal/adaptive-health:v3
+    env:
+      - NODE_ENV=production
+      - PORT=8787
+    expose:
+      - port: 8787
+        as: 80
+        to:
+          - global: true
+profiles:
+  compute:
+    adaptive-health:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 1Gi
+  placement:
+    dcloud:
+      pricing:
+        adaptive-health:
+          denom: uact
+          amount: 10000
+deployment:
+  adaptive-health:
+    dcloud:
+      profile: adaptive-health
+      count: 1

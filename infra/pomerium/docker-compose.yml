@@ -1,0 +1,11 @@
+services:
+  pomerium:
+    image: pomerium/pomerium:latest
+    container_name: adaptive-health-pomerium
+    volumes:
+      - ./config.yaml:/pomerium/config.yaml:ro
+      - ./certs:/pomerium/certs:ro
+    ports:
+      - "8443:8443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

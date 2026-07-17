@@ -1,0 +1,123 @@
+/* Theme Variables - Dark Mode (Default) */
+:root,
+:root[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #181818;
+  --bg-tertiary: #212525;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-tertiary: #999999;
+  --accent-primary: #7fee64;
+  --border-primary: #333333;
+}
+
+/* Light Mode */
+:root[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eeeeee;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-tertiary: #666666;
+  --accent-primary: #22c55e;
+  --border-primary: #e0e0e0;
+}
+
+/* Apply theme to html and body */
+html,
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Override hardcoded colors for theme support */
+
+/* Dark backgrounds (light mode: use white/light) */
+:root[data-theme="light"] .bg-\[\#000000\],
+:root[data-theme="light"] .bg-\[\#181818\],
+:root[data-theme="light"] .bg-\[\#212525\],
+:root[data-theme="light"] [style*="background: #000000"],
+:root[data-theme="light"] [style*="background: #181818"],
+:root[data-theme="light"] [style*="background: #212525"] {
+  background-color: #f8f8f8 !important;
+}
+
+/* Light text (light mode: use dark) */
+:root[data-theme="light"] .text-\[\#ddffdc\],
+:root[data-theme="light"] .text-\[\#8cab87\],
+:root[data-theme="light"] .text-\[\#677d64\],
+:root[data-theme="light"] [style*="color: #ddffdc"],
+:root[data-theme="light"] [style*="color: #8cab87"],
+:root[data-theme="light"] [style*="color: #677d64"] {
+  color: #1a1a1a !important;
+}
+
+/* Green accents (light mode: use bright green) */
+:root[data-theme="light"] .text-\[\#7fee64\],
+:root[data-theme="light"] .bg-\[\#7fee64\],
+:root[data-theme="light"] [style*="color: #7fee64"],
+:root[data-theme="light"] [style*="background: #7fee64"] {
+  color: #22c55e !important;
+  background-color: #22c55e !important;
+}
+
+/* Borders (light mode: use light borders) */
+:root[data-theme="light"] .border-\[\#485346\],
+:root[data-theme="light"] [style*="border-color: #485346"] {
+  border-color: #d4d4d4 !important;
+}
+
+/* Common elements */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.border-primary {
+  border-color: var(--border-primary);
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px var(--shadow-md);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px var(--shadow-lg);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Prevent transition on mount */
+.no-transition,
+.no-transition * {
+  transition: none !important;
+}
