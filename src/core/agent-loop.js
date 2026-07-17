@@ -36,7 +36,7 @@ export async function advanceAgentCycle(state, integrations) {
     action,
     evaluation,
     memory,
-    sponsorPath: buildSponsorPath({ healthContext, action, integrations })
+    sponsorPath: buildSponsorPath({ healthContext, diagnosis, action })
   };
 
   const nextState = {
@@ -79,7 +79,7 @@ function buildObservation(state, healthContext) {
   };
 }
 
-function buildSponsorPath({ healthContext, action, integrations }) {
+function buildSponsorPath({ healthContext, diagnosis, action }) {
   const nexlaLive = healthContext.normalizedBy === "nexla-live-ingest-verified";
   const nexlaLine = nexlaLive
     ? "Nexla ingested and schema-validated the health context live"
@@ -87,10 +87,12 @@ function buildSponsorPath({ healthContext, action, integrations }) {
       ? `Nexla fell back to demo data after a live error: ${healthContext.nexlaError}`
       : "Nexla normalized the health context (demo fallback)";
 
-  const zeroLive = integrations.reasoning.status().configured;
+  const zeroLive = diagnosis.reasoningSource === "zero.xyz";
   const zeroLine = zeroLive
-    ? "Zero.xyz reasoned over the agent roles (live)"
-    : "Zero.xyz reasoned over the agent roles (deterministic demo)";
+    ? `Zero.xyz diagnosed the bottleneck live${diagnosis.zeroCapability ? ` via ${diagnosis.zeroCapability}` : ""}`
+    : diagnosis.zeroError
+      ? `Zero.xyz fell back after a live error: ${diagnosis.zeroError}`
+      : "Zero.xyz reasoned over the agent roles (deterministic demo)";
 
   const pomeriumLine = action.securedBy === "pomerium-mtls"
     ? "Pomerium executed the action through the self-hosted mTLS-secured bridge (live)"
@@ -132,4 +134,3 @@ function updateMemory(memory, experiment, evaluation) {
     lessons: [...memory.lessons, evaluation.lesson]
   };
 }
-

@@ -4,10 +4,15 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 const ZERO_BIN = process.env.ZERO_BIN || "zero";
-const ZERO_SEARCH_QUERY = process.env.ZERO_SEARCH_QUERY || "LLM chat completion reasoning";
+const ZERO_SEARCH_QUERY = process.env.ZERO_SEARCH_QUERY || "openai chat completions json";
 const ZERO_MAX_PAY = process.env.ZERO_MAX_PAY || "0.10";
 const ZERO_TIMEOUT_MS = 20000;
 const ZERO_LIVE_ENABLED = process.env.ZERO_LIVE === "true" || process.env.ZERO_LIVE === "1";
+const ZERO_PREFERRED_MODEL = process.env.ZERO_MODEL || "gpt-4o-mini";
+const ZERO_BLOCKED_SLUGS = (process.env.ZERO_BLOCKED_SLUGS || "groq-chat-0362cf4f")
+  .split(",")
+  .map((slug) => slug.trim())
+  .filter(Boolean);
 
 const VALID_CATEGORIES = ["workout_timing", "caffeine_timing", "protein_intake", "maintain_routine"];
 
@@ -78,9 +83,10 @@ async function diagnoseViaZero({ observation }) {
     }
 
     const body = { model: capability.model, messages: buildDiagnosisMessages(observation) };
+    if (capability.requiresStreamFalse) body.stream = false;
     if (capability.supportsTemperature) body.temperature = 0.3;
     if (capability.maxTokensField) body[capability.maxTokensField] = 300;
-    if (capability.supportsResponseFormat) body.response_format = "json_object";
+    if (capability.supportsResponseFormat) body.response_format = { type: "json_object" };
 
     const envelope = await runZeroFetch(capability, body);
     runId = envelope.runId;
@@ -97,7 +103,7 @@ async function diagnoseViaZero({ observation }) {
     reviewBestEffort(runId, true, "Diagnosed a wellness bottleneck for Adaptive Health's Observe/Diagnose loop.");
 
     return {
-      rootCause: String(parsed.rootCause),
+      rootCause: normalizeRootCause(parsed.rootCause, parsed.category, observation),
       confidence: Number(parsed.confidence ?? 0.7),
       evidence: Array.isArray(parsed.evidence) ? parsed.evidence.map(String) : [],
       category: parsed.category,
@@ -111,6 +117,30 @@ async function diagnoseViaZero({ observation }) {
     }
     return fallback(reason);
   }
+}
+
+function normalizeRootCause(rootCause, category, observation) {
+  const value = String(rootCause || "").trim();
+  const looksLikeLabel = /^[a-z0-9_ -]{3,40}$/i.test(value) && !/[.]/.test(value);
+  if (!looksLikeLabel || value.split(/\s+/).length > 4) {
+    return value;
+  }
+
+  const deterministic = deterministicDiagnosis(observation);
+  if (deterministic.category === category) {
+    return deterministic.rootCause;
+  }
+
+  if (category === "workout_timing") {
+    return "Workout timing is the strongest bottleneck for the user's energy goal.";
+  }
+  if (category === "caffeine_timing") {
+    return "Late caffeine is the strongest bottleneck for sleep quality and next-day energy.";
+  }
+  if (category === "protein_intake") {
+    return "Low protein intake is the strongest bottleneck for stable energy.";
+  }
+  return "The current routine is working and should be maintained before adding complexity.";
 }
 
 async function runZeroFetch(capability, body) {
@@ -147,12 +177,15 @@ async function runZeroFetch(capability, body) {
 async function findChatCapability() {
   const { stdout } = await execFileAsync(
     ZERO_BIN,
-    ["search", ZERO_SEARCH_QUERY, "--json", "--status", "healthy", "--limit", "5"],
+    ["search", ZERO_SEARCH_QUERY, "--json", "--status", "healthy", "--limit", "10"],
     { timeout: ZERO_TIMEOUT_MS }
   );
   const results = JSON.parse(stdout);
+  const candidates = (results.capabilities || [])
+    .filter((candidate) => !ZERO_BLOCKED_SLUGS.includes(candidate.slug))
+    .sort(compareCapabilityCandidates);
 
-  for (const candidate of results.capabilities || []) {
+  for (const candidate of candidates) {
     try {
       const { stdout: detailOut } = await execFileAsync(ZERO_BIN, ["get", candidate.token, "--json"], {
         timeout: ZERO_TIMEOUT_MS
@@ -164,9 +197,10 @@ async function findChatCapability() {
           token: candidate.token,
           url: detail.url,
           canonicalName: candidate.canonicalName || candidate.name,
-          model: pickModel(properties.model, detail.example?.request?.model),
+          model: pickModel(candidate, properties.model, detail.example?.request?.model),
           supportsTemperature: "temperature" in properties,
           supportsResponseFormat: "response_format" in properties,
+          requiresStreamFalse: requiresStreamFalse(detail.bodySchema),
           maxTokensField: "max_completion_tokens" in properties
             ? "max_completion_tokens"
             : "max_tokens" in properties
@@ -182,11 +216,46 @@ async function findChatCapability() {
   return null;
 }
 
-function pickModel(modelSchema, exampleModel) {
+function compareCapabilityCandidates(a, b) {
+  return capabilityScore(b) - capabilityScore(a);
+}
+
+function capabilityScore(candidate) {
+  const slug = `${candidate.slug || ""} ${candidate.canonicalName || ""}`.toLowerCase();
+  const rating = Number(candidate.rating?.score || 0);
+  const successRate = Number(candidate.rating?.successRate || 0);
+  const reviewCount = Number(candidate.reviewCount || 0);
+  const activationCount = Number(candidate.activationCount || 0);
+  const cost = Number(candidate.cost?.amount || 1);
+
+  let score = rating * 10 + successRate * 8 + Math.min(reviewCount, 10) + Math.log10(activationCount + 1);
+  if (slug.includes("agent402")) score += 12;
+  if (slug.includes("openrouter")) score += 8;
+  if (slug.includes("gpt-4o-mini")) score += 4;
+  if (slug.includes("groq")) score -= 30;
+  score -= cost * 10;
+  return score;
+}
+
+function requiresStreamFalse(bodySchema) {
+  return bodySchema?.required?.includes("stream") || bodySchema?.properties?.stream?.const === false;
+}
+
+function pickModel(candidate, modelSchema, exampleModel) {
   if (exampleModel) return exampleModel;
   if (Array.isArray(modelSchema?.enum) && modelSchema.enum.length > 0) return modelSchema.enum[0];
+  const text = `${candidate.canonicalName || ""} ${candidate.name || ""} ${candidate.description || ""} ${modelSchema?.description || ""}`.toLowerCase();
+  if (text.includes("gpt-4o-mini")) return "gpt-4o-mini";
+  if (text.includes("openrouter")) return process.env.ZERO_OPENROUTER_MODEL || "openai/gpt-4o-mini";
   return "llama-3.3-70b-versatile";
 }
+
+export const __zeroTestHooks = {
+  capabilityScore,
+  pickModel,
+  requiresStreamFalse,
+  normalizeRootCause
+};
 
 function extractMessageContent(body) {
   const content = body?.data?.choices?.[0]?.message?.content ?? body?.choices?.[0]?.message?.content;
