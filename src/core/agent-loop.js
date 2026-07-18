@@ -19,7 +19,10 @@ export async function advanceAgentCycle(state, integrations) {
     observation,
     diagnosis
   });
-  const action = await integrations.actions.executeIntervention({ state, experiment, observation });
+  const actions = integrations.actions.executeInterventions
+    ? await integrations.actions.executeInterventions({ state, experiment, observation })
+    : [await integrations.actions.executeIntervention({ state, experiment, observation })];
+  const action = actions[0];
   const nextContext = getDemoHealthContext(dayIndex + 1);
   const evaluation = await integrations.reasoning.evaluate({
     state,
@@ -37,6 +40,7 @@ export async function advanceAgentCycle(state, integrations) {
     diagnosis,
     experiment,
     action,
+    actions,
     evaluation,
     memory,
     sponsorPath: buildSponsorPath({ healthContext, diagnosis, action })
@@ -48,7 +52,7 @@ export async function advanceAgentCycle(state, integrations) {
     energyScore: evaluation.after,
     currentBottleneck: diagnosis.rootCause,
     activeExperiment: experiment,
-    suggestedActions: [action],
+    suggestedActions: actions,
     timeline: [...state.timeline, cycle],
     memory,
     updatedAt: new Date().toISOString()

@@ -104,6 +104,7 @@ export interface AdaptiveCycle {
   diagnosis: Diagnosis;
   experiment: Experiment;
   action: SuggestedAction;
+  actions?: SuggestedAction[];
   evaluation: Evaluation;
   memory: {
     experiments: MemoryExperiment[];

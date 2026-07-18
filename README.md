@@ -1,216 +1,153 @@
-# LifeOS — Your Autonomous Health Agent
+# LifeOS: Autonomous Health Optimization Agent
 
-An AI-powered autonomous health agent that doesn't just recommend—it acts. LifeOS continuously monitors your data, analyzes your health patterns, and automatically optimizes your daily schedule for peak performance.
+LifeOS is an autonomous health agent that closes the loop between health data, reasoning, and action. Instead of only recommending what a user should do, it observes daily signals, diagnoses the bottleneck, proposes an experiment, executes a safe action, measures the next-day outcome, and remembers what worked.
 
-## 🎯 Overview
-
-LifeOS runs a continuous agent loop while you sleep. By morning, your day is already rebuilt around what your body actually needs—not what you planned yesterday.
-
-**Key Features:**
-- **Autonomous Actions**: Cancels workouts, moves alarms, blocks screens, adjusts nutrition plans
-- **Real-time Health Analysis**: Processes sleep, HRV, recovery metrics, and calendar data
-- **Multi-Agent Architecture**: Specialized agents for planning, critiquing, workout expertise, and nutrition
-- **Zero-Trust Security**: Every action goes through Pomerium's policy layer before execution
-- **Decentralized Compute**: Runs 24/7 on Akash's network without central server dependency
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Git
-
-### Installation
-
-1. **Clone the repository:**
-```bash
-git clone https://github.com/VamikaSinghal/aws-hackathon.git
-cd lifeos
-```
-
-2. **Install dependencies:**
-```bash
-npm install
-```
-
-3. **Set up environment variables:**
-```bash
-# Create .env.local and add your configuration
-cp .env.example .env.local
-```
-
-### Development
-
-Start the development server:
-```bash
-npm run dev
-```
-
-The app will be available at `http://localhost:3000`
-
-### Production Build
+Built for the Loop Engineering Hackathon, LifeOS is designed to showcase a real sponsor-backed agent workflow:
 
 ```text
-GET  /health
-GET  /api/state
-GET  /api/timeline
-GET  /api/integrations/status
-POST /api/goal
-POST /api/advance-day
-POST /api/reset
-GET  /auth/google
-GET  /api/google-calendar/events?date=YYYY-MM-DD
-POST /api/google-calendar/test-write
+Collect -> Diagnose -> Plan -> Act -> Observe -> Learn
 ```
 
-## 📁 Project Structure
+## What It Does
 
-```
-lifeos/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx              # Landing page with hero, problem, solution sections
-│   │   ├── layout.tsx            # Root layout with interactive background
-│   │   ├── globals.css           # Global styles and animations
-│   │   └── dashboard/            # Dashboard pages (app interface)
-│   └── components/
-│       └── InteractiveBackground.tsx  # Canvas-based animated background
-├── public/                        # Static assets
-├── next.config.js               # Next.js configuration
-├── tailwind.config.ts           # Tailwind CSS configuration
-├── tsconfig.json                # TypeScript configuration
-└── package.json                 # Dependencies and scripts
-```
+LifeOS optimizes for a user's health goal, currently `increase_energy`, by combining wearable-style metrics, schedule context, AI reasoning, and secure action execution.
 
-## ✨ Features
+The demo starts with loop history already built up, so judges can see that the system has been learning across days. A live run can then advance the next day and show:
 
-### Interactive Background
-The project includes a beautiful interactive blurred moving background that:
-- Features 6 animated circular blobs in sporty green colors (#7fee64, #9cbf93, #aed2a4, #18b759)
-- Responds to mouse movement with subtle attraction effects
-- Implements physics-based movement with bouncing and friction
-- Uses canvas rendering with heavy blur for sleek visual effect
-- Adapts to window resizing
+- Health context collected and normalized
+- Multi-agent diagnosis of the current bottleneck
+- A proposed one-day intervention
+- Action execution through a secured bridge
+- Outcome evaluation and memory update
+- Sponsor integration status for each part of the loop
 
-### Landing Page Sections
-1. **Hero** - Call-to-action with animated 3D cube visualization
-2. **Problem** - Explains the gap in current health app ecosystem
-3. **Solution** - Shows LifeOS in action with specific autonomy examples
-4. **Workflow** - Interactive 6-step loop diagram showing how the agent operates
-5. **Architecture** - Five-layer technical stack with sponsor integrations
-6. **Sponsors** - Detailed breakdown of each technology partner
-7. **CTA** - Final call to action for dashboard access
+## Why It Matters
 
-## 🏗️ Architecture
+Most health apps stop at dashboards and recommendations. LifeOS demonstrates what comes next: an agent that can responsibly act on behalf of the user.
 
-LifeOS operates through a continuous loop of six steps:
+Examples:
 
-1. **Collect** - Nexla ingests data from Apple Health, Oura, Google Calendar, Gmail
-2. **Diagnose** - AWS Bedrock + Zero.xyz run specialized sub-agents in parallel
-3. **Plan** - Multi-agent debate between Planner, Critic, and experts
-4. **Act** - Pomerium authorizes all actions before execution
-5. **Observe** - Nexla streams outcomes back for evaluation
-6. **Learn** - Strategy changelog updates with efficacy metrics
+- If recovery is low and the calendar is packed, LifeOS can move a workout.
+- If late caffeine hurts sleep, it can create a reminder.
+- If protein intake is the bottleneck, it can propose a nutrition intervention.
+- If an action touches a sensitive service, it goes through Pomerium before execution.
 
-### Technology Stack
+## Sponsor Integrations
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Animation**: Canvas API for interactive background
-- **Data Integration**: Nexla (health data hub)
-- **AI/Agents**: AWS Bedrock, Zero.xyz (multi-agent orchestration)
-- **Security**: Pomerium (zero-trust policy enforcement)
-- **Compute**: Akash (decentralized 24/7 runtime)
-- **Storage**: DynamoDB (strategy store and learning)
+| Sponsor / Platform | Role | Current Status |
+| --- | --- | --- |
+| Nexla | Health/context data layer | Live ingest and schema verification |
+| Zero.xyz | Multi-agent reasoning marketplace | Live diagnostician calls with fallback |
+| Pomerium | Secure action bridge | Live self-hosted mTLS proxy |
+| Google Calendar | Live schedule context and calendar writes | Live read/write OAuth integration |
+| AWS | Scheduled orchestration and persistence path | Deployed Lambda/DynamoDB/EventBridge path |
+| Akash | Persistent decentralized runtime | Deployment manifest and live deployment path |
 
-## 🎨 Design System
+The app uses deterministic demo health metrics where real wearable credentials are not available, but the orchestration path and sponsor integrations are real implementation surfaces. Google Calendar is connected as a real user data source and can create real calendar events.
 
-### Color Palette
-- **Lime Pulse**: `#7fee64` - Primary action/accent
-- **Phosphor White**: `#ddffdc` - Text/headings
-- **Sage 60**: `#8cab87` - Secondary text
-- **Moss 70**: `#9cbf93` - Tertiary elements
-- **Void Black**: `#000000` - Dark backgrounds
+## Architecture
 
-### Typography
-- **Display Font**: Space Grotesk (headings)
-- **Body Font**: Inter (content)
-- **Monospace**: Fira Mono (code/data)
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env.local` file with:
-```env
-# Add your configuration here
-NEXT_PUBLIC_API_URL=your_api_url
+```text
+Frontend Dashboard (Next.js)
+        |
+        v
+Next API Proxy (/api/adaptive-health/*)
+        |
+        v
+Adaptive Health Backend (Node.js)
+        |
+        +--> Nexla: ingest + schema validation
+        +--> Zero.xyz: live diagnosis capability call
+        +--> Google Calendar: read schedule context
+        +--> Pomerium: mTLS-gated action bridge
+        +--> AWS/Akash: deployable autonomous runtime paths
 ```
 
-### Tailwind CSS
-Custom configuration in `tailwind.config.ts` includes:
-- Extended color palette
-- Custom spacing
-- Animation definitions
+The backend stores local demo state in `data/adaptive-health-state.json` during development. In the AWS deployment path, state can be persisted through DynamoDB.
 
-## 📝 Available Scripts
+## Repository Layout
+
+```text
+.
+├── src/                         # Backend agent loop and integrations
+│   ├── app.js                   # Application orchestration API
+│   ├── server.js                # Local HTTP server
+│   ├── core/                    # Agent loop, state, and demo health context
+│   ├── integrations/            # Nexla, Zero, Pomerium, Google Calendar, AWS, Akash
+│   ├── services/                # Pomerium-protected action upstream
+│   └── storage/                 # Local file / DynamoDB state storage
+├── frontend/                    # Next.js dashboard and landing page
+├── infra/                       # Pomerium and AWS deployment assets
+├── docs/                        # API docs, integration notes, screenshots
+├── test/                        # Node test suite
+├── Dockerfile                   # Container image for Akash/deployments
+└── deploy.akash.yaml            # Akash SDL
+```
+
+## Local Demo
+
+Start the backend:
 
 ```bash
-# Development server
+cd /Users/magichour/Documents/LifeOS/aws-hackathon
+npm install
 npm run dev
-
-# Production build
-npm run build
-
-# Start production server
-npm start
-
-# Lint code
-npm run lint
-
-# Type check
-npm run type-check
 ```
 
-## 🌐 Deployment
+Start the frontend in another terminal:
 
-### Vercel (Recommended)
 ```bash
-vercel deploy
+cd /Users/magichour/Documents/LifeOS/aws-hackathon/frontend
+npm install
+npm run dev
 ```
 
-### Docker
-Create a `Dockerfile` for containerized deployment
+Open the dashboard:
 
-### AWS
-Deploy to AWS using Amplify or EC2
+```text
+http://127.0.0.1:3000/dashboard
+```
 
-## 🔐 Security
+Useful backend URLs:
 
-- Zero-trust architecture with Pomerium policy enforcement
-- No central server storage - decentralized on Akash network
-- All agent actions require explicit authorization
-- Privacy-first data handling
-- Audit logging for all operations
+```text
+GET  http://127.0.0.1:8787/health
+GET  http://127.0.0.1:8787/api/state
+GET  http://127.0.0.1:8787/api/integrations/status
+GET  http://127.0.0.1:8787/api/google-calendar/events?date=YYYY-MM-DD
+POST http://127.0.0.1:8787/api/advance-day
+POST http://127.0.0.1:8787/api/google-calendar/test-write
+```
 
-## 📊 Performance
+## Demo Script
 
-- **Build Size**: ~104 kB First Load JS (homepage)
-- **Dashboard**: ~102 kB First Load JS
-- **Canvas Rendering**: 60fps animations
-- **Responsive**: Optimized for mobile, tablet, and desktop
+1. Open the dashboard at `/dashboard`.
+2. Show the top bar: backend live, current loop number, current energy score.
+3. Open **Data Flow** and point out the sponsor path:
+   - Nexla collects and normalizes context.
+   - Zero.xyz powers diagnosis.
+   - Pomerium gates actions.
+   - Google Calendar is live read/write.
+   - AWS and Akash show deployable runtime paths.
+4. Open **Agent Reasoning** to show the multi-agent decision process.
+5. Open **Actions** to show what the agent executed.
+6. Open **History** to show memory from prior experiments.
+7. Click **Advance Day** to run a new loop live.
+8. For guaranteed Google Calendar write proof, call:
 
-## 🤝 Contributing
+```bash
+curl -X POST http://127.0.0.1:8787/api/google-calendar/test-write
+```
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Then verify the event:
 
-## 📄 License
+```bash
+curl "http://127.0.0.1:8787/api/google-calendar/events?date=2026-07-17"
+```
 
-## Google Calendar Setup (LIVE read/write)
+## Google Calendar Setup
 
-Google Calendar can replace the simulated calendar context with your real schedule and can create real calendar events when the agent executes a `calendar_event` action through the Pomerium-protected bridge.
+LifeOS can read from and write to a real Google Calendar.
 
 In Google Cloud Console:
 
@@ -222,41 +159,96 @@ In Google Cloud Console:
 http://127.0.0.1:8787/auth/google/callback
 ```
 
-Then set `.env`:
+In `.env`:
 
 ```text
 GOOGLE_CLIENT_ID=<oauth-client-id>
 GOOGLE_CLIENT_SECRET=<oauth-client-secret>
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8787/auth/google/callback
+GOOGLE_TOKEN_PATH=./data/google-calendar-token.json
 GOOGLE_CALENDAR_ID=primary
-GOOGLE_CALENDAR_WRITE_ENABLED=false
+GOOGLE_CALENDAR_TIME_ZONE=America/Los_Angeles
+GOOGLE_CALENDAR_WRITE_ENABLED=true
 ```
 
-Restart `npm run dev`, then open:
+Restart the backend, then open:
 
 ```text
 http://127.0.0.1:8787/auth/google
 ```
 
-After consent succeeds, `GET /api/state` and the dashboard will show `integrations.googleCalendar.mode`. `advance-day` will read real events into `observation.calendar` when connected. Flip `GOOGLE_CALENDAR_WRITE_ENABLED=true` only when you're ready for real writes; then restart the backend and use `POST /api/google-calendar/test-write` or the dashboard's `Advance Day` flow.
+When connected, `/api/integrations/status` should show:
 
-## AWS Setup (LIVE — deployed)
+```json
+{
+  "mode": "live-read-write",
+  "connected": true,
+  "writeEnabled": true
+}
+```
 
-## 🏆 Built By
+## Environment
 
-Built for the **Loop Engineering Hackathon** at tokens& SF 2025
+Copy `.env.example` to `.env` and fill only the services you want to run live. Missing credentials fall back to deterministic demo behavior where possible.
 
-**Sponsors & Partners:**
-- Nexla - Health data hub
-- Zero.xyz - Multi-agent planner
-- AWS - Orchestration backbone
-- Pomerium - Secure agent runtime
-- Akash - Persistent decentralized compute
+Important local secrets are ignored by git:
 
-## 📧 Contact
+- `.env`
+- `data/*.json`
+- `infra/pomerium/certs/`
 
-For questions or support, reach out to the team at the hackathon or via the GitHub issues.
+## Validation
 
----
+Backend tests:
 
-**Wake up to a better day. Every day.**
+```bash
+npm test
+```
+
+Frontend build:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Deployment Paths
+
+AWS:
+
+- `src/lambda.js` exposes the Lambda handler.
+- `infra/aws/template.yaml` defines Lambda, DynamoDB, and EventBridge Scheduler.
+- Local state uses a JSON file; deployed state can use DynamoDB.
+
+Akash:
+
+- `Dockerfile` builds the backend container.
+- `deploy.akash.yaml` defines the Akash deployment.
+- The app is designed to keep the loop running beyond a browser session.
+
+## Screenshots
+
+### Loop Overview
+
+![Loop Overview](docs/screenshots/loop-overview.png)
+
+### Agent Reasoning
+
+![Agent Reasoning](docs/screenshots/agent-reasoning.png)
+
+### Data Flow and Sponsor Status
+
+![Data Flow and Sponsor Status](docs/screenshots/data-flow.png)
+
+### Actions
+
+![Actions](docs/screenshots/actions.png)
+
+### Experiment History
+
+![Experiment History](docs/screenshots/history.png)
+
+### Diet Suggestions
+
+![Diet Suggestions](docs/screenshots/diet-suggestions.png)
+

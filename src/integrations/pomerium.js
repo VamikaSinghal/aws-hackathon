@@ -63,74 +63,134 @@ export function createPomeriumActionClient() {
     },
 
     async executeIntervention({ experiment, observation }) {
-      const action = actionForExperiment(experiment);
-      if (action.actionType === "calendar_event" && observation?.date) {
-        action.scheduledDate = observation.date;
-      }
+      const [primaryAction] = await this.executeInterventions({ experiment, observation });
+      return primaryAction;
+    },
 
+    async executeInterventions({ experiment, observation }) {
+      const actions = actionsForExperiment(experiment).map((action) => {
+        if (action.actionType === "calendar_event" && observation?.date) {
+          return { ...action, scheduledDate: observation.date };
+        }
+        return action;
+      });
+
+      const results = [];
       if (!isConfigured) {
-        return {
+        return actions.map((action) => ({
           ...action,
           status: "simulated_success",
           securedBy: "pomerium-ready-action-contract"
-        };
+        }));
       }
 
-      try {
-        const { statusCode, raw } = await postThroughPomerium(actionUrl, action);
-        if (statusCode !== 200) {
-          throw new Error(`Pomerium rejected the action request: HTTP ${statusCode}`);
+      for (const action of actions) {
+        try {
+          const { statusCode, raw } = await postThroughPomerium(actionUrl, action);
+          if (statusCode !== 200) {
+            throw new Error(`Pomerium rejected the action request: HTTP ${statusCode}`);
+          }
+
+          results.push({
+            ...action,
+            status: "executed",
+            securedBy: "pomerium-mtls",
+            upstream: JSON.parse(raw)
+          });
+        } catch (error) {
+          results.push({
+            ...action,
+            status: "simulated_success",
+            securedBy: "pomerium-ready-action-contract",
+            pomeriumError: error instanceof Error ? error.message : String(error)
+          });
         }
-
-        return {
-          ...action,
-          status: "executed",
-          securedBy: "pomerium-mtls",
-          upstream: JSON.parse(raw)
-        };
-      } catch (error) {
-        return {
-          ...action,
-          status: "simulated_success",
-          securedBy: "pomerium-ready-action-contract",
-          pomeriumError: error instanceof Error ? error.message : String(error)
-        };
       }
+
+      return results;
     }
   };
 }
 
-function actionForExperiment(experiment) {
+function actionsForExperiment(experiment) {
   if (experiment.intervention === "evening_workout") {
-    return {
-      actionType: "calendar_event",
-      title: "Workout",
-      scheduledFor: "19:00",
-      description: "Moved by Adaptive Health because morning workouts conflict with calendar."
-    };
+    return [
+      {
+        actionType: "calendar_event",
+        title: "Workout",
+        scheduledFor: "19:00",
+        description: "Moved by Adaptive Health because morning workouts conflict with calendar."
+      },
+      {
+        actionType: "reminder",
+        title: "Pack workout clothes",
+        scheduledFor: "16:30",
+        description: "Prep cue for the evening workout experiment."
+      },
+      {
+        actionType: "routine_lock",
+        title: "Protect post-workout wind-down",
+        description: "Avoid adding late meetings after the workout block."
+      }
+    ];
   }
 
   if (experiment.intervention === "caffeine_cutoff") {
-    return {
-      actionType: "reminder",
-      title: "No caffeine after 2 PM",
-      scheduledFor: "14:00",
-      description: "Adaptive Health experiment to improve sleep quality."
-    };
+    return [
+      {
+        actionType: "reminder",
+        title: "No caffeine after 2 PM",
+        scheduledFor: "14:00",
+        description: "Adaptive Health experiment to improve sleep quality."
+      },
+      {
+        actionType: "calendar_event",
+        title: "Caffeine-free wind-down",
+        scheduledFor: "21:30",
+        description: "Calendar block created by Adaptive Health to protect sleep quality."
+      },
+      {
+        actionType: "routine_lock",
+        title: "Block late espresso habit",
+        description: "Keep stimulants out of the afternoon routine during this experiment."
+      }
+    ];
   }
 
   if (experiment.intervention === "high_protein_breakfast") {
-    return {
-      actionType: "grocery_list",
-      title: "High-protein breakfast",
-      items: ["Greek yogurt", "eggs", "tofu", "berries"],
-      description: "Adaptive Health experiment to reduce morning energy dip."
-    };
+    return [
+      {
+        actionType: "calendar_event",
+        title: "High-protein breakfast",
+        scheduledFor: "07:30",
+        description: "Calendar block created by Adaptive Health to reduce the morning energy dip."
+      },
+      {
+        actionType: "grocery_list",
+        title: "High-protein breakfast supplies",
+        items: ["Greek yogurt", "eggs", "tofu", "berries"],
+        description: "Adaptive Health experiment to reduce morning energy dip."
+      },
+      {
+        actionType: "reminder",
+        title: "Prep protein breakfast",
+        scheduledFor: "21:00",
+        description: "Evening prep reminder so breakfast is easy tomorrow."
+      }
+    ];
   }
 
-  return {
-    actionType: "routine_lock",
-    title: "Preserve current routine",
-    description: "Avoid adding a new intervention while current metrics are improving."
-  };
+  return [
+    {
+      actionType: "calendar_event",
+      title: "Recovery check-in",
+      scheduledFor: "20:30",
+      description: "Calendar check-in created by Adaptive Health while preserving the current routine."
+    },
+    {
+      actionType: "routine_lock",
+      title: "Preserve current routine",
+      description: "Avoid adding a new intervention while current metrics are improving."
+    }
+  ];
 }

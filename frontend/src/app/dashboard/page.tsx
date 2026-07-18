@@ -2066,7 +2066,12 @@ export default function Dashboard() {
         { time: ts(), stage: "collect", message: result.cycle.observation.summary, sponsor: "Nexla" },
         { time: ts(), stage: "diagnose", message: result.cycle.diagnosis.rootCause, sponsor: "Zero.xyz" },
         { time: ts(), stage: "plan", message: result.cycle.experiment.hypothesis, sponsor: "Zero.xyz" },
-        { time: ts(), stage: "act", message: `${result.cycle.action.title} ${result.cycle.action.status}`, sponsor: "Pomerium" },
+        {
+          time: ts(),
+          stage: "act",
+          message: `${result.cycle.actions?.length || 1} actions executed through Pomerium`,
+          sponsor: "Pomerium"
+        },
         { time: ts(), stage: "learn", message: result.cycle.evaluation.lesson, sponsor: "AWS" },
       ]);
     } catch (error) {
